@@ -27,6 +27,10 @@ public class TbRoleInfo {
     @Column(name = "name")
     private String name;
 
+    @Comment("角色描述")
+    @Column(name = "description")
+    private String description;
+
     @Comment("是否删除")
     @Column(name = "deleted", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean deleted;

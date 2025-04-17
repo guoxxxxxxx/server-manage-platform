@@ -1,4 +1,4 @@
-package com.iecas.servermanageplatform.entity;
+package com.iecas.servermanageplatform.pojo.entity;
 
 
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.iecas.servermanageplatform.entity;
+package com.iecas.servermanageplatform.pojo.entity;
 
 
 import lombok.Data;
@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * (ServerRoleAuthorityInfo)表实体类
+ * (ServerUserPasswordInfo)表实体类
  *
  * @author guox
  * @since 2025-04-17 16:21:27
@@ -17,7 +17,7 @@ import java.util.Date;
 
 
 @Data
-public class ServerRoleAuthorityInfo implements Serializable {
+public class ServerUserPasswordInfo implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -28,24 +28,24 @@ public class ServerRoleAuthorityInfo implements Serializable {
     private Long id;
     
     /**
-     * 是否可访问
-     */
-    private Integer canAccess;
-    
-    /**
      * 是否删除
      */
     private Integer deleted;
     
     /**
-     * 角色id
+     * 密码
      */
-    private Long roleId;
+    private String password;
     
     /**
      * 服务器id
      */
     private Long serverId;
+    
+    /**
+     * 用户名
+     */
+    private String username;
     
 }
 

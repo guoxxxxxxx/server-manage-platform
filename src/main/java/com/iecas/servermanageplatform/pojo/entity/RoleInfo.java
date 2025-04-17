@@ -1,6 +1,7 @@
-package com.iecas.servermanageplatform.entity;
+package com.iecas.servermanageplatform.pojo.entity;
 
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.Serial;
@@ -17,6 +18,7 @@ import java.util.Date;
 
 
 @Data
+@AllArgsConstructor
 public class RoleInfo implements Serializable {
 
     @Serial
@@ -28,14 +30,19 @@ public class RoleInfo implements Serializable {
     private Long id;
     
     /**
-     * 是否删除
-     */
-    private Integer deleted;
-    
-    /**
      * 角色名
      */
     private String name;
-    
+
+    /**
+     * 描述
+     */
+    private String description;
+
+    /**
+     * 是否删除
+     */
+    private Integer deleted;
+
 }
 

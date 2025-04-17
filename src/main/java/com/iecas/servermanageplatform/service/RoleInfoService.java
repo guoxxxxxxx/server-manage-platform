@@ -1,7 +1,7 @@
 package com.iecas.servermanageplatform.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.iecas.servermanageplatform.entity.RoleInfo;
+import com.iecas.servermanageplatform.pojo.entity.RoleInfo;
 
 /**
  * (RoleInfo)表服务接口
