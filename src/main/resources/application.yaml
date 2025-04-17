@@ -1,0 +1,32 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: server-manage-platform
+  datasource:
+    username: root
+    password: A123456
+    url: jdbc:mysql://${mysql.url}:${mysql.port}/db_server_manage_platform?serverTimezone=UTC
+    type: com.alibaba.druid.pool.DruidDataSource
+  jpa:
+    hibernate:
+      ddl-auto: update
+  data:
+    redis:
+      host: ${redis.url}
+      port: ${redis.port}
+      database: 1
+      password: ${redis.password}
+
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      table-prefix: tb_
+
+server:
+  port: 31500
+  servlet:
+    context-path: /api
