@@ -51,7 +51,7 @@ public class TbUserInfo {
     private String avatar;
 
     @Comment("用户角色等级id")
-    @Column(name = "role_id")
+    @Column(name = "role_id", columnDefinition = "INT8 DEFAULT 4")
     private Long roleId;
 
     @Comment("账户锁")

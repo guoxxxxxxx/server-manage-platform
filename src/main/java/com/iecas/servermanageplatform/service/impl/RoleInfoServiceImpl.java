@@ -2,7 +2,7 @@ package com.iecas.servermanageplatform.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.iecas.servermanageplatform.dao.RoleInfoDao;
-import com.iecas.servermanageplatform.entity.RoleInfo;
+import com.iecas.servermanageplatform.pojo.entity.RoleInfo;
 import com.iecas.servermanageplatform.service.RoleInfoService;
 import org.springframework.stereotype.Service;
 

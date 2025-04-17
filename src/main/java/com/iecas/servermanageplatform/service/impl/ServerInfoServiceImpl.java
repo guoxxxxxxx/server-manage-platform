@@ -2,7 +2,7 @@ package com.iecas.servermanageplatform.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.iecas.servermanageplatform.dao.ServerInfoDao;
-import com.iecas.servermanageplatform.entity.ServerInfo;
+import com.iecas.servermanageplatform.pojo.entity.ServerInfo;
 import com.iecas.servermanageplatform.service.ServerInfoService;
 import org.springframework.stereotype.Service;
 

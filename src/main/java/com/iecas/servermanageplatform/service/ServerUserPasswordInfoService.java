@@ -1,7 +1,7 @@
 package com.iecas.servermanageplatform.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.iecas.servermanageplatform.entity.ServerUserPasswordInfo;
+import com.iecas.servermanageplatform.pojo.entity.ServerUserPasswordInfo;
 
 /**
  * (ServerUserPasswordInfo)表服务接口

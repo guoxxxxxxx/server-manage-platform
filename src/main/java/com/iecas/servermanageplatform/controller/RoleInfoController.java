@@ -2,14 +2,9 @@ package com.iecas.servermanageplatform.controller;
 
 
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.iecas.servermanageplatform.entity.RoleInfo;
 import com.iecas.servermanageplatform.service.RoleInfoService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.Serializable;
-import java.util.List;
 
 /**
  * (RoleInfo)表控制层

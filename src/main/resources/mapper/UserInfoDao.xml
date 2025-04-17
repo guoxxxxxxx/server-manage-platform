@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.iecas.servermanageplatform.dao.UserInfoDao">
 
-    <resultMap type="com.iecas.servermanageplatform.entity.UserInfo" id="UserInfoMap">
+    <resultMap type="com.iecas.servermanageplatform.pojo.entity.UserInfo" id="UserInfoMap">
         <result property="id" column="id" jdbcType="INTEGER"/>
         <result property="avatar" column="avatar" jdbcType="VARCHAR"/>
         <result property="deleted" column="deleted" jdbcType="INTEGER"/>
