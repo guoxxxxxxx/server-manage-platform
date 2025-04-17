@@ -5,7 +5,7 @@ spring:
     name: server-manage-platform
   datasource:
     username: root
-    password: A123456
+    password: 123456
     url: jdbc:mysql://${mysql.url}:${mysql.port}/db_server_manage_platform?serverTimezone=UTC
     type: com.alibaba.druid.pool.DruidDataSource
   jpa:
