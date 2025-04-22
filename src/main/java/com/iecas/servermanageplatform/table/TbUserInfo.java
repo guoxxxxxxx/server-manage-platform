@@ -27,8 +27,16 @@ public class TbUserInfo {
     private Long id;
 
     @Comment("用户名")
-    @Column(name = "username", nullable = false)
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
+
+    @Comment("用户手机号")
+    @Column(name = "phone")
+    private String phone;
+
+    @Comment("用户邮箱")
+    @Column(name = "email")
+    private String email;
 
     @Comment("密码")
     @Column(name = "password")
@@ -51,7 +59,7 @@ public class TbUserInfo {
     private String avatar;
 
     @Comment("用户角色等级id")
-    @Column(name = "role_id", columnDefinition = "INT8 DEFAULT 4")
+    @Column(name = "role_id", columnDefinition = "INT8 DEFAULT 5")
     private Long roleId;
 
     @Comment("账户锁")
