@@ -1,6 +1,8 @@
 package com.iecas.servermanageplatform.pojo.entity;
 
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,6 +32,7 @@ public class UserInfo implements Serializable {
     /**
      * 用户主键
      */
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -45,7 +48,7 @@ public class UserInfo implements Serializable {
     /**
      * 上次登录ip
      */
-    private Date lastLoginIp;
+    private String lastLoginIp;
 
     /**
      * 上次登录时间
