@@ -52,7 +52,7 @@ public class TbUserInfo {
 
     @Comment("上次登录ip")
     @Column(name = "last_login_ip")
-    private Date lastLoginIp;
+    private String lastLoginIp;
 
     @Comment("用户头像")
     @Column(name = "avatar")
@@ -63,7 +63,7 @@ public class TbUserInfo {
     private Long roleId;
 
     @Comment("账户锁")
-    @Column(name = "locked")
+    @Column(name = "locked", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean locked;
 
     @Comment("删除位")

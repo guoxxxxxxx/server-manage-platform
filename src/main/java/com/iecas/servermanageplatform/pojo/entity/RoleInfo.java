@@ -1,6 +1,8 @@
 package com.iecas.servermanageplatform.pojo.entity;
 
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -27,6 +29,7 @@ public class RoleInfo implements Serializable {
     /**
      * 主键
      */
+    @TableId(type = IdType.AUTO)
     private Long id;
     
     /**

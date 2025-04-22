@@ -12,7 +12,13 @@ public enum RedisPrefix {
     /**
      * 注册验证码
      */
-    REGISTER_AUTH_CODE("auth:code:register");
+    REGISTER_AUTH_CODE("auth:code:register:"),
+    /**
+     * 找回密码验证码
+     */
+    RESET_AUTH_CODE("auth:code:reset:")
+
+    ;
 
 
 

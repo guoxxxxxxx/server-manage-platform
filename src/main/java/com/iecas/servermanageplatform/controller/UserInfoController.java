@@ -4,8 +4,13 @@ package com.iecas.servermanageplatform.controller;
 
 import com.iecas.servermanageplatform.aop.annotation.Logger;
 import com.iecas.servermanageplatform.common.CommonResult;
+import com.iecas.servermanageplatform.pojo.dto.ResetPasswordDTO;
+import com.iecas.servermanageplatform.pojo.dto.UserLoginDTO;
 import com.iecas.servermanageplatform.pojo.dto.UserRegisterDTO;
+import com.iecas.servermanageplatform.pojo.dto.ValidAuthCodeDTO;
+import com.iecas.servermanageplatform.pojo.entity.UserInfo;
 import com.iecas.servermanageplatform.service.UserInfoService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -41,6 +46,38 @@ public class UserInfoController {
     public CommonResult register(@RequestBody UserRegisterDTO dto){
         userInfoService.register(dto);
         return new CommonResult().success();
+    }
+
+
+    @PostMapping("/login")
+    @Logger("用户登录")
+    public CommonResult login(@RequestBody UserLoginDTO dto, HttpServletRequest httpServletRequest){
+        String token = userInfoService.login(dto, httpServletRequest);
+        return new CommonResult().success().data(token);
+    }
+
+
+    @PostMapping("/parseUserInfoByToken")
+    @Logger("通过token解析用户信息")
+    public CommonResult parseUserInfoByToken(@RequestBody String token){
+        UserInfo result = userInfoService.parseUserInfoByToken(token);
+        return new CommonResult().success().data(result);
+    }
+
+
+    @PostMapping("/validAuthCode")
+    @Logger("验证验证码是否正确")
+    public CommonResult validAuthCode(@RequestBody ValidAuthCodeDTO dto){
+        boolean result = userInfoService.validAuthCode(dto);
+        return new CommonResult().data(result).success();
+    }
+
+
+    @PostMapping("/reset")
+    @Logger("重置密码")
+    public CommonResult reset(@RequestBody ResetPasswordDTO dto){
+        boolean result = userInfoService.reset(dto);
+        return new CommonResult().success().data(result);
     }
 
 }
