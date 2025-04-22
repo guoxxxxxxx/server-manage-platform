@@ -1,7 +1,10 @@
 package com.iecas.servermanageplatform.pojo.entity;
 
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -15,7 +18,9 @@ import java.util.Date;
  */
 
 
-
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 public class UserInfo implements Serializable {
 
@@ -26,27 +31,27 @@ public class UserInfo implements Serializable {
      * 用户主键
      */
     private Long id;
-    
+
     /**
      * 用户头像
      */
     private String avatar;
-    
+
     /**
      * 删除位
      */
     private Integer deleted;
-    
+
     /**
      * 上次登录ip
      */
     private Date lastLoginIp;
-    
+
     /**
      * 上次登录时间
      */
     private Date lastLoginTime;
-    
+
     /**
      * 账户锁
      */
@@ -71,6 +76,16 @@ public class UserInfo implements Serializable {
      * 用户名
      */
     private String username;
+
+    /**
+     * 手机号
+     */
+    private String phone;
+
+    /**
+     * 邮箱
+     */
+    private String email;
     
 }
 

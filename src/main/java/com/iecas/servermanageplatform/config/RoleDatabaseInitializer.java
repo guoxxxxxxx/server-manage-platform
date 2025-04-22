@@ -43,7 +43,8 @@ public class RoleDatabaseInitializer implements CommandLineRunner {
                 new RoleInfo(1L,  "SUPER_SYSTEM_ADMIN", "超级系统管理员", 0),
                 new RoleInfo(2L,  "SUPER_ADMIN", "超级管理员", 0),
                 new RoleInfo(3L,  "ADMIN", "管理员", 0),
-                new RoleInfo(4L,  "USER", "普通用户", 0)
+                new RoleInfo(4L,  "USER", "普通用户", 0),
+                new RoleInfo(5L,  "NON_AUTHORITY_USER", "无权限用户", 0)
         );
         roleInfoService.saveBatch(roles);
     }
