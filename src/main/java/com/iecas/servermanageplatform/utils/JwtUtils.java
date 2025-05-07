@@ -7,7 +7,7 @@
 
 package com.iecas.servermanageplatform.utils;
 
-import com.iecas.servermanageplatform.exception.LoginExpiredException;
+import com.iecas.servermanageplatform.exception.CustomLoginExpiredException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -88,7 +88,7 @@ public class JwtUtils {
         } catch (Exception e) {
             if (e instanceof ExpiredJwtException){
                 log.info("Expired JWT token");
-                throw new LoginExpiredException("token 已经过期, 请重新登录");
+                throw new CustomLoginExpiredException("token 已经过期, 请重新登录");
             }
             else if (e instanceof JwtException){
                 log.info("Invalid JWT token");
