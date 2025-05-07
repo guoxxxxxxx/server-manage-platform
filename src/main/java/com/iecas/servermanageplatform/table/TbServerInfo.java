@@ -77,9 +77,17 @@ public class TbServerInfo {
     @Column(name = "memory_space")
     private Integer memorySpace;
 
+    @Comment("可用内存空间")
+    @Column(name = "freeMemorySpace")
+    private Integer freeMemorySpace;
+
     @Comment("硬盘空间")
     @Column(name = "disk_space")
     private Integer diskSpace;
+
+    @Comment("可用硬盘空间")
+    @Column(name = "free_disk_space")
+    private Integer freeDiskSpace;
 
     @Comment("最后上线时间")
     @Column(name = "last_online_time")
@@ -100,4 +108,20 @@ public class TbServerInfo {
     @Comment("是否删除")
     @Column(name = "deleted", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean deleted;
+
+    @Comment("服务器状态")
+    @Column(name = "status")
+    private String status;
+
+    @Comment("上一次更新时间")
+    @Column(name = "last_update")
+    private Date lastUpdate;
+
+    @Comment("添加人")
+    @Column(name = "user_id")
+    private Long userId;
+
+    @Comment("端口号")
+    @Column(name = "port", columnDefinition = "varchar(16) default '22'")
+    private String port;
 }

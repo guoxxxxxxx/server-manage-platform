@@ -8,9 +8,9 @@
 package com.iecas.servermanageplatform.exception;
 
 
-public class LoginExpiredException extends RuntimeException{
+public class CustomLoginExpiredException extends RuntimeException{
 
-    public LoginExpiredException(String message){
+    public CustomLoginExpiredException(String message){
         super(message);
     }
 }

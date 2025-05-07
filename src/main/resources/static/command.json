@@ -1,0 +1,10 @@
+{
+  "serverDetailsCommand": {
+    "ubuntu": {
+      "cpu": "lscpu | grep \"Model name:\"",
+      "os": "cat /etc/os-release | grep PRETTY_NAME=",
+      "memory": "free -h | greo Mem:",
+      "disk": "df -h /"
+    }
+  }
+}

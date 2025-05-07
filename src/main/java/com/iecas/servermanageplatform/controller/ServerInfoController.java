@@ -2,9 +2,19 @@ package com.iecas.servermanageplatform.controller;
 
 
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.iecas.servermanageplatform.aop.annotation.Auth;
+import com.iecas.servermanageplatform.aop.annotation.Logger;
+import com.iecas.servermanageplatform.common.CommonResult;
+import com.iecas.servermanageplatform.common.PageResult;
+import com.iecas.servermanageplatform.pojo.dto.QueryServerInfoDTO;
+import com.iecas.servermanageplatform.pojo.entity.ServerInfo;
+import com.iecas.servermanageplatform.pojo.vo.AddServerInfoVO;
 import com.iecas.servermanageplatform.service.ServerInfoService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 /**
  * (ServerInfo)表控制层
@@ -16,12 +26,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 
 @RestController
-@RequestMapping("serverInfo")
+@RequestMapping("/serverInfo")
 public class ServerInfoController {
     /**
      * 服务对象
      */
     @Autowired
     private ServerInfoService serverInfoService;
+
+
+    @Auth
+    @Logger("添加服务器")
+    @PostMapping("/addServers")
+    public CommonResult addServers(@RequestBody List<ServerInfo> infoList){
+        AddServerInfoVO vo = serverInfoService.addServers(infoList);
+        return new CommonResult().success().data(vo);
+    }
+
+
+    @Auth
+    @Logger("获取所有服务器列表")
+    @GetMapping("/getPage")
+    public CommonResult getPage(QueryServerInfoDTO dto){
+        IPage<ServerInfo> result = serverInfoService.getPage(dto);
+        return new CommonResult().data(new PageResult<>(result)).success();
+    }
 }
 

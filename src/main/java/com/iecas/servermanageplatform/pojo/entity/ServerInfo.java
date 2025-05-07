@@ -3,7 +3,9 @@ package com.iecas.servermanageplatform.pojo.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import jakarta.persistence.Column;
 import lombok.Data;
+import org.hibernate.annotations.Comment;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -124,6 +126,41 @@ public class ServerInfo implements Serializable {
      * 维修人员电话
      */
     private String repairerPhone;
-    
+
+
+    /**
+     * 服务器状态
+     */
+    private String status;
+
+
+    /**
+     * 上一次更新时间
+     */
+    private Date lastUpdate;
+
+
+    /**
+     * 可用内存空间
+     */
+    private Integer freeMemorySpace;
+
+
+    /**
+     * 可用磁盘空间
+     */
+    private Integer freeDiskSpace;
+
+
+    /**
+     * 添加人
+     */
+    private Long userId;
+
+
+    /**
+     * 端口号
+     */
+    private String port;
 }
 

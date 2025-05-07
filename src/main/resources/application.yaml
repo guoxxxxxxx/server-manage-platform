@@ -30,3 +30,6 @@ server:
   port: 31500
   servlet:
     context-path: /api
+
+
+command-path: command.json

@@ -10,7 +10,7 @@ package com.iecas.servermanageplatform.config;
 
 import com.iecas.servermanageplatform.common.CommonResult;
 import com.iecas.servermanageplatform.exception.CommonException;
-import com.iecas.servermanageplatform.exception.LoginExpiredException;
+import com.iecas.servermanageplatform.exception.CustomLoginExpiredException;
 import com.iecas.servermanageplatform.exception.WarningTipsException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -71,8 +71,8 @@ public class CommonGlobalExceptionHandler {
      * @param e LoginExpiredException
      * @return CommonResult
      */
-    @ExceptionHandler(LoginExpiredException.class)
-    public CommonResult handleLoginExpiredException(LoginExpiredException e){
+    @ExceptionHandler(CustomLoginExpiredException.class)
+    public CommonResult handleLoginExpiredException(CustomLoginExpiredException e){
         return new CommonResult().status(5503).message(e.getMessage());
     }
 

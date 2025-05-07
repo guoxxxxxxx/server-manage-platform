@@ -38,4 +38,8 @@ public class TbServerUserPasswordInfo {
     @Comment("是否删除")
     @Column(name = "deleted", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean deleted;
+
+    @Comment("对应用户的id")
+    @Column(name = "user_id")
+    private Long userId;
 }
