@@ -8,16 +8,21 @@ import com.iecas.servermanageplatform.config.UserThreadLocal;
 import com.iecas.servermanageplatform.dao.ServerInfoDao;
 import com.iecas.servermanageplatform.exception.WarningTipsException;
 import com.iecas.servermanageplatform.pojo.dto.QueryServerInfoDTO;
+import com.iecas.servermanageplatform.pojo.entity.ServerHardwareInfo;
 import com.iecas.servermanageplatform.pojo.entity.ServerInfo;
 import com.iecas.servermanageplatform.pojo.entity.ServerUserPasswordInfo;
 import com.iecas.servermanageplatform.pojo.entity.UserInfo;
 import com.iecas.servermanageplatform.pojo.vo.AddServerInfoVO;
 import com.iecas.servermanageplatform.service.ServerInfoService;
 import com.iecas.servermanageplatform.service.ServerUserPasswordInfoService;
+import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsFactory;
+import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsUtils;
 import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -72,6 +77,11 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
                         .userId(currentUser.getId()).build();
                 serverUserPasswordInfoService.save(serverUserPasswordInfo);
                 successCount += insert;
+                // 多线程更新服务器硬件信息
+                Thread updateThread = new Thread(() -> {
+                    updateHardwareInfo(serverInfo.getId());
+                });
+                updateThread.start();
             }
             else{
                 // 查询当前用户针对当前服务器是否有存在的账户密码
@@ -110,6 +120,43 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
     @Override
     public IPage<ServerInfo> getPage(QueryServerInfoDTO dto) {
         return baseMapper.selectPage(new Page<>(dto.getPageNo(), dto.getPageSize()), null);
+    }
+
+
+    /**
+     * 更新服务器硬件信息
+     * @param serverId 服务器id
+     * @return
+     */
+    @Override
+    public boolean updateHardwareInfo(Long serverId){
+        // 查询服务器详细信息
+        ServerInfo serverInfo = baseMapper.selectById(serverId);
+
+        // 获取服务器硬件信息工具类 默认为ubuntu系统
+        ServerDetailsUtils serverDetailsUtils = ServerDetailsFactory.create("ubuntu");
+
+        // 判断当前操作系统并获得对应的对象实体
+        String currentOS = serverInfo.getOperatingSystem();
+        if (currentOS != null && currentOS.toLowerCase().contains("ubuntu")){
+            serverDetailsUtils = ServerDetailsFactory.create("ubuntu");
+        }
+
+        // 连接ssh
+        serverDetailsUtils.connect(serverInfo.getIp(), Integer.parseInt(serverInfo.getPort()),
+                serverInfo.getLoginUsername(), serverInfo.getLoginPassword());
+        // 获取硬件信息
+        ServerHardwareInfo serverHardwareInfo = serverDetailsUtils.getServerHardwareInfo();
+        // 将信息进行更新
+        serverInfo.setCpu(serverHardwareInfo.getCpu());
+        serverInfo.setOperatingSystem(serverHardwareInfo.getOs());
+        serverInfo.setDiskSpace(serverHardwareInfo.getTotalDiskSpace());
+        serverInfo.setFreeDiskSpace(serverHardwareInfo.getFreeDiskSpace());
+        serverInfo.setMemorySpace(serverHardwareInfo.getTotalMemSpace());
+        serverInfo.setFreeMemorySpace(serverHardwareInfo.getFreeMemSpace());
+        serverInfo.setLastUpdate(new Date());
+        baseMapper.updateById(serverInfo);
+        return true;
     }
 }
 
