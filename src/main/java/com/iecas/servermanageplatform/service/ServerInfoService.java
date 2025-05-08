@@ -27,6 +27,20 @@ public interface ServerInfoService extends IService<ServerInfo> {
      */
     AddServerInfoVO addServers(List<ServerInfo> infoList);
 
+
+    /**
+     * 分页查询
+     * @param dto 查询条件
+     * @return 分页结果
+     */
     IPage<ServerInfo> getPage(QueryServerInfoDTO dto);
+
+
+    /**
+     * 更新服务器硬件信息
+     * @param serverId 服务器id
+     * @return 更新结果
+     */
+    boolean updateHardwareInfo(Long serverId);
 }
 

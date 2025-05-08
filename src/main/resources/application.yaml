@@ -31,5 +31,5 @@ server:
   servlet:
     context-path: /api
 
-
-command-path: command.json
+supportOS:
+  - ubuntu

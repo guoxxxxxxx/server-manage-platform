@@ -50,7 +50,7 @@ public class ServerInfo implements Serializable {
     /**
      * 硬盘空间
      */
-    private Integer diskSpace;
+    private Long diskSpace;
     
     /**
      * 服务器IP
@@ -85,7 +85,7 @@ public class ServerInfo implements Serializable {
     /**
      * 内存空间
      */
-    private Integer memorySpace;
+    private Long memorySpace;
     
     /**
      * 服务器名称
@@ -143,13 +143,13 @@ public class ServerInfo implements Serializable {
     /**
      * 可用内存空间
      */
-    private Integer freeMemorySpace;
+    private Long freeMemorySpace;
 
 
     /**
      * 可用磁盘空间
      */
-    private Integer freeDiskSpace;
+    private Long freeDiskSpace;
 
 
     /**
