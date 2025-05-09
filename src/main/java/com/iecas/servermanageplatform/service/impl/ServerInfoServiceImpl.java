@@ -218,7 +218,7 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             try {
                 future.get();
             } catch (ExecutionException | InterruptedException e) {
-                throw new RuntimeException(e);
+                log.debug("目标主机链接失败!");
             }
         }
         executorService.shutdown();
@@ -247,6 +247,10 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             // 如果链接成功 则存入缓存
             if (connect) {
                 serverDetailsUtilsConcurrentHashMap.put(e.getId(), serverDetailsUtils);
+            }
+            // 如果失败则删除缓存
+            else {
+                serverDetailsUtilsConcurrentHashMap.remove(e.getId());
             }
         }
 
