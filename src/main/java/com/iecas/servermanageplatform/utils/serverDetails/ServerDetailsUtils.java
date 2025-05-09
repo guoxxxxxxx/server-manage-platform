@@ -24,4 +24,18 @@ public abstract class ServerDetailsUtils implements ServerDetailsUtilsInterface{
         sshUtils = new SSHUtils(host, port, username, password);
         return sshUtils.connect();
     }
+
+
+    /**
+     * 连接服务器
+     * @param host 主机地址
+     * @param port 端口
+     * @param username 用户名
+     * @param password 密码
+     * @return true:连接成功 false:连接失败
+     */
+    public boolean connect(String host, String port, String username, String password){
+        sshUtils = new SSHUtils(host, Integer.parseInt(port), username, password);
+        return sshUtils.connect();
+    }
 }

@@ -42,5 +42,13 @@ public interface ServerInfoService extends IService<ServerInfo> {
      * @return 更新结果
      */
     boolean updateHardwareInfo(Long serverId);
+
+
+    /**
+     * 根据id列表查询服务器的详细信息
+     * @param ids id列表
+     * @return 服务器列表
+     */
+    List<ServerInfo> getByIds(List<Integer> ids);
 }
 

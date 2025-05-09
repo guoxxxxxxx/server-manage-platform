@@ -12,6 +12,7 @@ import com.iecas.servermanageplatform.pojo.entity.ServerHardwareInfo;
 import com.iecas.servermanageplatform.pojo.entity.ServerInfo;
 import com.iecas.servermanageplatform.pojo.entity.ServerUserPasswordInfo;
 import com.iecas.servermanageplatform.pojo.entity.UserInfo;
+import com.iecas.servermanageplatform.pojo.enums.OSEnum;
 import com.iecas.servermanageplatform.pojo.vo.AddServerInfoVO;
 import com.iecas.servermanageplatform.service.ServerInfoService;
 import com.iecas.servermanageplatform.service.ServerUserPasswordInfoService;
@@ -134,12 +135,12 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
         ServerInfo serverInfo = baseMapper.selectById(serverId);
 
         // 获取服务器硬件信息工具类 默认为ubuntu系统
-        ServerDetailsUtils serverDetailsUtils = ServerDetailsFactory.create("ubuntu");
+        ServerDetailsUtils serverDetailsUtils = ServerDetailsFactory.create(OSEnum.UBUNTU);
 
         // 判断当前操作系统并获得对应的对象实体
         String currentOS = serverInfo.getOperatingSystem();
         if (currentOS != null && currentOS.toLowerCase().contains("ubuntu")){
-            serverDetailsUtils = ServerDetailsFactory.create("ubuntu");
+            serverDetailsUtils = ServerDetailsFactory.create(OSEnum.UBUNTU);
         }
 
         // 连接ssh
@@ -157,6 +158,13 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
         serverInfo.setLastUpdate(new Date());
         baseMapper.updateById(serverInfo);
         return true;
+    }
+
+
+    @Override
+    public List<ServerInfo> getByIds(List<Integer> ids) {
+        return baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
+                .in(ServerInfo::getId, ids));
     }
 }
 

@@ -3,6 +3,7 @@ package com.iecas.servermanageplatform.pojo.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
@@ -60,11 +61,13 @@ public class ServerInfo implements Serializable {
     /**
      * 最后登录时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date lastLoginTime;
     
     /**
      * 最后上线时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date lastOnlineTime;
     
     /**
@@ -137,6 +140,7 @@ public class ServerInfo implements Serializable {
     /**
      * 上一次更新时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date lastUpdate;
 
 
