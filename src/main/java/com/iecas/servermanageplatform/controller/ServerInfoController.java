@@ -66,8 +66,17 @@ public class ServerInfoController {
     @Auth
     @Logger("根据服务器ids获取指定服务器的详细信息")
     @PostMapping("/getServerInfoByIds")
-    public CommonResult getServerInfoByIds(@RequestBody List<Integer> ids){
+    public CommonResult getServerInfoByIds(@RequestBody List<Long> ids){
         List<ServerInfo> result = serverInfoService.getByIds(ids);
+        return new CommonResult().data(result).success();
+    }
+
+
+    @Auth
+    @Logger("根据服务器id更新服务器信息")
+    @PostMapping("/updateHardwareInfoByIds")
+    public CommonResult updateHardwareInfoByIds(@RequestBody List<Long> ids){
+        List<ServerInfo> result = serverInfoService.updateHardwareInfoByIds(ids);
         return new CommonResult().data(result).success();
     }
 }
