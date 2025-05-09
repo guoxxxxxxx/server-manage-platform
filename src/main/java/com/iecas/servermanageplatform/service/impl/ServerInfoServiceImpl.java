@@ -1,6 +1,7 @@
 package com.iecas.servermanageplatform.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -16,10 +17,12 @@ import com.iecas.servermanageplatform.pojo.enums.OSEnum;
 import com.iecas.servermanageplatform.pojo.vo.AddServerInfoVO;
 import com.iecas.servermanageplatform.service.ServerInfoService;
 import com.iecas.servermanageplatform.service.ServerUserPasswordInfoService;
+import com.iecas.servermanageplatform.task.UpdateServerInfoTask;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsFactory;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsUtils;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -162,9 +165,68 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
 
     @Override
-    public List<ServerInfo> getByIds(List<Integer> ids) {
+    public List<ServerInfo> getByIds(List<Long> ids) {
         return baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
                 .in(ServerInfo::getId, ids));
+    }
+
+
+    @Override
+    public List<ServerInfo> updateHardwareInfoByIds(List<Long> ids) {
+        // 更新服务器信息
+        updateServerHardwareInfo(ids);
+        // 获取更新后的服务器信息
+        return baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
+                .in(ServerInfo::getId, ids));
+    }
+
+
+    /**
+     * 更新服务器信息
+     * @param ids 指定的服务器id
+     */
+    @Override
+    public void updateServerHardwareInfo(List<Long> ids) {
+        // 将要更新的服务器信息
+        List<ServerInfo> serverInfoList;
+        if (ids == null || ids.isEmpty()) {
+            // 查询所有服务器信息
+            serverInfoList = baseMapper.selectList(null);
+        }
+        else{
+            // 查询指定的服务器信息
+            serverInfoList = baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
+                    .in(ServerInfo::getId, ids));
+        }
+        // 遍历更新每一个服务器的信息
+        for (ServerInfo e : serverInfoList){
+            // 当前操作系统的指令集对象
+            ServerDetailsUtils serverDetailsUtils = ServerDetailsFactory.create(OSEnum.UBUNTU);
+            // 判断当前服务器的操作系统
+            // TODO 此处需要根据操作系统创建对应的指令集对象 当前默认采用ubuntu
+            boolean connect = serverDetailsUtils.connect(e.getIp(), e.getPort(), e.getLoginUsername(), e.getLoginPassword());
+            if (connect) {
+                ServerHardwareInfo serverHardwareInfo = serverDetailsUtils.getServerHardwareInfo();
+                // 将信息更新至数据库
+                baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
+                        .eq(ServerInfo::getId, e.getId())
+                        .set(ServerInfo::getCpu, serverHardwareInfo.getCpu())
+                        .set(ServerInfo::getOperatingSystem, serverHardwareInfo.getOs())
+                        .set(ServerInfo::getDiskSpace, serverHardwareInfo.getTotalDiskSpace())
+                        .set(ServerInfo::getFreeDiskSpace, serverHardwareInfo.getFreeDiskSpace())
+                        .set(ServerInfo::getMemorySpace, serverHardwareInfo.getTotalMemSpace())
+                        .set(ServerInfo::getFreeMemorySpace, serverHardwareInfo.getFreeMemSpace())
+                        .set(ServerInfo::getLastUpdate, new Date())
+                        .set(ServerInfo::getStatus, "在线")
+                );
+            }
+            else {
+                baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
+                        .eq(ServerInfo::getId, e.getId())
+                        .set(ServerInfo::getStatus, "离线")
+                        .set(ServerInfo::getLastUpdate, new Date()));
+            }
+        }
     }
 }
 

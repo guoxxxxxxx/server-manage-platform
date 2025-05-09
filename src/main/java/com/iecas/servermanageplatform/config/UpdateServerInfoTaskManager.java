@@ -1,5 +1,6 @@
 package com.iecas.servermanageplatform.config;
 
+import com.iecas.servermanageplatform.service.ServerInfoService;
 import com.iecas.servermanageplatform.task.UpdateServerInfoTask;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -16,12 +17,12 @@ import org.springframework.stereotype.Component;
 public class UpdateServerInfoTaskManager {
 
     @Resource
-    UpdateServerInfoTask updateServerInfoThread;
+    ServerInfoService serverInfoService;
 
 
     @Scheduled(fixedDelay = 60000)
     public void update(){
-        updateServerInfoThread.run();
+        serverInfoService.updateServerHardwareInfo(null);
         log.debug("服务器硬件状态信息已更新!");
     }
 }
