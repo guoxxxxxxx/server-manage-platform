@@ -58,6 +58,11 @@ public class SSHUtils {
     }
 
 
+    /**
+     * 执行命令
+     * @param command 命令
+     * @return 执行结果
+     */
     public String exec(String command){
         try(Session sshSession = sshClient.startSession();
             Session.Command result = sshSession.exec(command)){
@@ -66,5 +71,14 @@ public class SSHUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    /**
+     * 判断服务器是否存活
+     * @return true:存活 false:不存活
+     */
+    public boolean isAlive(){
+        return sshClient.isConnected();
     }
 }

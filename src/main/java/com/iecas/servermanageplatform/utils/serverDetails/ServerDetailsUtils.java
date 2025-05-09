@@ -38,4 +38,13 @@ public abstract class ServerDetailsUtils implements ServerDetailsUtilsInterface{
         sshUtils = new SSHUtils(host, Integer.parseInt(port), username, password);
         return sshUtils.connect();
     }
+
+
+    /**
+     * 获取当前服务器ssh客户端
+     * @return ssh客户端
+     */
+    public SSHUtils getSshUtils(){
+        return this.sshUtils;
+    }
 }

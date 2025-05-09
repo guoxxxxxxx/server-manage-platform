@@ -17,17 +17,15 @@ import com.iecas.servermanageplatform.pojo.enums.OSEnum;
 import com.iecas.servermanageplatform.pojo.vo.AddServerInfoVO;
 import com.iecas.servermanageplatform.service.ServerInfoService;
 import com.iecas.servermanageplatform.service.ServerUserPasswordInfoService;
-import com.iecas.servermanageplatform.task.UpdateServerInfoTask;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsFactory;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsUtils;
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.*;
 
 /**
  * (ServerInfo)表服务实现类
@@ -40,6 +38,10 @@ import java.util.List;
 
 @Service("serverInfoService")
 public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo> implements ServerInfoService {
+
+    // 连接缓存
+    private final ConcurrentHashMap<Long, ServerDetailsUtils> serverDetailsUtilsConcurrentHashMap = new ConcurrentHashMap<>();
+
 
     @Resource
     private ServerUserPasswordInfoService serverUserPasswordInfoService;
@@ -198,34 +200,78 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             serverInfoList = baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
                     .in(ServerInfo::getId, ids));
         }
+
+        // 线程池
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        List<Future<Void>> futures = new ArrayList<>();
+
         // 遍历更新每一个服务器的信息
         for (ServerInfo e : serverInfoList){
-            // 当前操作系统的指令集对象
-            ServerDetailsUtils serverDetailsUtils = ServerDetailsFactory.create(OSEnum.UBUNTU);
-            // 判断当前服务器的操作系统
-            // TODO 此处需要根据操作系统创建对应的指令集对象 当前默认采用ubuntu
-            boolean connect = serverDetailsUtils.connect(e.getIp(), e.getPort(), e.getLoginUsername(), e.getLoginPassword());
+            futures.add(executorService.submit(() -> {
+                updateSingleServerInfo(e);
+                return null;
+            }));
+        }
+
+        // 等待全部任务执行完
+        for (Future<Void> future : futures) {
+            try {
+                future.get();
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        executorService.shutdown();
+    }
+
+
+    /**
+     * 更新单个服务器信息
+     * @param e 更新的服务器信息
+     */
+    private void updateSingleServerInfo(ServerInfo e){
+        // 当前操作系统的指令集对象
+        ServerDetailsUtils serverDetailsUtils = ServerDetailsFactory.create(OSEnum.UBUNTU);
+
+        // 是否链接成功
+        boolean connect;
+
+        // 判断缓存中是否有当前对象的链接
+        if (serverDetailsUtilsConcurrentHashMap.get(e.getId()) != null
+                && serverDetailsUtilsConcurrentHashMap.get(e.getId()).getSshUtils().isAlive()){
+            serverDetailsUtils = serverDetailsUtilsConcurrentHashMap.get(e.getId());
+            connect = true;
+        }
+        else{
+            connect = serverDetailsUtils.connect(e.getIp(), e.getPort(), e.getLoginUsername(), e.getLoginPassword());
+            // 如果链接成功 则存入缓存
             if (connect) {
-                ServerHardwareInfo serverHardwareInfo = serverDetailsUtils.getServerHardwareInfo();
-                // 将信息更新至数据库
-                baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
-                        .eq(ServerInfo::getId, e.getId())
-                        .set(ServerInfo::getCpu, serverHardwareInfo.getCpu())
-                        .set(ServerInfo::getOperatingSystem, serverHardwareInfo.getOs())
-                        .set(ServerInfo::getDiskSpace, serverHardwareInfo.getTotalDiskSpace())
-                        .set(ServerInfo::getFreeDiskSpace, serverHardwareInfo.getFreeDiskSpace())
-                        .set(ServerInfo::getMemorySpace, serverHardwareInfo.getTotalMemSpace())
-                        .set(ServerInfo::getFreeMemorySpace, serverHardwareInfo.getFreeMemSpace())
-                        .set(ServerInfo::getLastUpdate, new Date())
-                        .set(ServerInfo::getStatus, "在线")
-                );
+                serverDetailsUtilsConcurrentHashMap.put(e.getId(), serverDetailsUtils);
             }
-            else {
-                baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
-                        .eq(ServerInfo::getId, e.getId())
-                        .set(ServerInfo::getStatus, "离线")
-                        .set(ServerInfo::getLastUpdate, new Date()));
-            }
+        }
+
+        // 判断当前服务器的操作系统
+        // TODO 此处需要根据操作系统创建对应的指令集对象 当前默认采用ubuntu
+        if (connect) {
+            ServerHardwareInfo serverHardwareInfo = serverDetailsUtils.getServerHardwareInfo();
+            // 将信息更新至数据库
+            baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
+                    .eq(ServerInfo::getId, e.getId())
+                    .set(ServerInfo::getCpu, serverHardwareInfo.getCpu())
+                    .set(ServerInfo::getOperatingSystem, serverHardwareInfo.getOs())
+                    .set(ServerInfo::getDiskSpace, serverHardwareInfo.getTotalDiskSpace())
+                    .set(ServerInfo::getFreeDiskSpace, serverHardwareInfo.getFreeDiskSpace())
+                    .set(ServerInfo::getMemorySpace, serverHardwareInfo.getTotalMemSpace())
+                    .set(ServerInfo::getFreeMemorySpace, serverHardwareInfo.getFreeMemSpace())
+                    .set(ServerInfo::getLastUpdate, new Date())
+                    .set(ServerInfo::getStatus, "在线")
+            );
+        }
+        else {
+            baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
+                    .eq(ServerInfo::getId, e.getId())
+                    .set(ServerInfo::getStatus, "离线")
+                    .set(ServerInfo::getLastUpdate, new Date()));
         }
     }
 }
