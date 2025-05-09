@@ -14,6 +14,7 @@ import com.iecas.servermanageplatform.service.ServerInfoService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -50,6 +51,24 @@ public class ServerInfoController {
     public CommonResult getPage(QueryServerInfoDTO dto){
         IPage<ServerInfo> result = serverInfoService.getPage(dto);
         return new CommonResult().data(new PageResult<>(result)).success();
+    }
+
+
+    @Auth
+    @Logger("获取服务器详细信息")
+    @GetMapping("/getServerInfo")
+    public CommonResult getServerInfo(@RequestParam Integer id){
+        ServerInfo serverInfo = serverInfoService.getById(id);
+        return new CommonResult().data(serverInfo).success();
+    }
+
+
+    @Auth
+    @Logger("根据服务器ids获取指定服务器的详细信息")
+    @PostMapping("/getServerInfoByIds")
+    public CommonResult getServerInfoByIds(@RequestBody List<Integer> ids){
+        List<ServerInfo> result = serverInfoService.getByIds(ids);
+        return new CommonResult().data(result).success();
     }
 }
 

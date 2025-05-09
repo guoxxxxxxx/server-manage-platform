@@ -21,7 +21,7 @@ public class ServerInfoImplTest {
     @Test
     void updateHardwareInfoTest(){
         System.out.println("123");
-        boolean b = serverInfoService.updateHardwareInfo(6L);
+        boolean b = serverInfoService.updateHardwareInfo(7L);
         System.out.println(b);
     }
 }

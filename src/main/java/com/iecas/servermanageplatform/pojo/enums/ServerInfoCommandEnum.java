@@ -14,8 +14,8 @@ public enum ServerInfoCommandEnum {
     UBUNTU(
             "lscpu | grep \"Model name:\"",
             "cat /etc/os-release | grep PRETTY_NAME=",
-            "free -h | grep Mem:",
-            "df -h /"
+            "free -k | grep Mem:",
+            "df -k /home"
     );
 
     private String CPU;

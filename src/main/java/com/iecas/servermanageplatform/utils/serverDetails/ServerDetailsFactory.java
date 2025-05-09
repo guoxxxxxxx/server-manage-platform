@@ -1,5 +1,7 @@
 package com.iecas.servermanageplatform.utils.serverDetails;
 
+import com.iecas.servermanageplatform.pojo.enums.OSEnum;
+
 /**
  * @Author: guo_x
  * @Date: 2025/5/7 16:03
@@ -8,10 +10,10 @@ package com.iecas.servermanageplatform.utils.serverDetails;
 public class ServerDetailsFactory {
 
 
-    public static ServerDetailsUtils create(String type){
-        return switch (type.toLowerCase()){
+    public static ServerDetailsUtils create(OSEnum os){
+        return switch (os.getOsName().toLowerCase()){
             case "ubuntu" -> new UbuntuServerDetailsUtils();
-            default -> throw new IllegalArgumentException("未知类型: " + type);
+            default -> throw new IllegalArgumentException("未知类型: " + os.getOsName());
         };
     }
 }
