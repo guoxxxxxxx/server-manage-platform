@@ -61,4 +61,13 @@ public class UbuntuServerDetailsUtils extends ServerDetailsUtils {
                 .freeMemSpace(memInfo.getSecond()).build();
         return hardwareInfo;
     }
+
+
+    @Override
+    public boolean shutdown(String password) {
+        String shutdownCommand = String.format(ServerInfoCommandEnum.UBUNTU.getSHUTDOWN(), password);
+        String exec = sshUtils.exec(shutdownCommand);
+        log.info(exec);
+        return true;
+    }
 }

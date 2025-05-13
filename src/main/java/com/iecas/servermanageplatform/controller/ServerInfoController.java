@@ -79,5 +79,14 @@ public class ServerInfoController {
         List<ServerInfo> result = serverInfoService.updateHardwareInfoByIds(ids);
         return new CommonResult().data(result).success();
     }
+
+
+    @Auth
+    @Logger("根据服务器id关闭服务器")
+    @PostMapping("/shutdownById")
+    public CommonResult shutdownById(@RequestBody Long serverId){
+        boolean result = serverInfoService.shutdownById(serverId);
+        return new CommonResult().data(result).success();
+    }
 }
 

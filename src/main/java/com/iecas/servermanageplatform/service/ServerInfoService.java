@@ -65,5 +65,13 @@ public interface ServerInfoService extends IService<ServerInfo> {
      * @param ids id列表
      */
     void updateServerHardwareInfo(List<Long> ids);
+
+
+    /**
+     * 根据服务器id关闭服务器
+     * @param serverId 服务器id
+     * @return
+     */
+    boolean shutdownById(Long serverId);
 }
 

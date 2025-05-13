@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.iecas.servermanageplatform.config.UserThreadLocal;
 import com.iecas.servermanageplatform.dao.ServerInfoDao;
+import com.iecas.servermanageplatform.exception.CommonException;
 import com.iecas.servermanageplatform.exception.WarningTipsException;
 import com.iecas.servermanageplatform.pojo.dto.QueryServerInfoDTO;
 import com.iecas.servermanageplatform.pojo.entity.ServerHardwareInfo;
@@ -20,6 +21,8 @@ import com.iecas.servermanageplatform.service.ServerUserPasswordInfoService;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsFactory;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsUtils;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -35,7 +38,7 @@ import java.util.concurrent.*;
  */
 
 
-
+@Slf4j
 @Service("serverInfoService")
 public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo> implements ServerInfoService {
 
@@ -225,6 +228,26 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
     }
 
 
+    @Override
+    public boolean shutdownById(Long serverId) {
+        // 查询当前服务器信息
+        ServerInfo serverInfo = baseMapper.selectById(serverId);
+        // 判断当前服务器是否在线
+        if (serverInfo.getStatus().equals("离线")){
+            log.info("服务器id: {} 当前服务器已经离线!", serverInfo);
+            throw new WarningTipsException("当前服务器已离线");
+        }
+        // 获取当前服务器的指令集对象
+        ServerDetailsUtils serverDetailsUtilsByServerId = getServerDetailsUtilsByServerId(serverId);
+        // 如果对象为null则返回失败消息
+        if (serverDetailsUtilsByServerId == null){
+            log.debug("服务器指令集对象连接失败!");
+            throw new WarningTipsException("连接服务器失败");
+        }
+        return serverDetailsUtilsByServerId.shutdown(serverInfo.getLoginPassword());
+    }
+
+
     /**
      * 更新单个服务器信息
      * @param e 更新的服务器信息
@@ -276,6 +299,44 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
                     .eq(ServerInfo::getId, e.getId())
                     .set(ServerInfo::getStatus, "离线")
                     .set(ServerInfo::getLastUpdate, new Date()));
+        }
+    }
+
+
+    /**
+     * 根据服务器id获取当前服务器的连接对象
+     * @param serverId 服务器id
+     * @return 指令集对象
+     */
+    private ServerDetailsUtils getServerDetailsUtilsByServerId(Long serverId){
+
+        // 查询缓存中是否有当前服务器链接对象
+        if (serverDetailsUtilsConcurrentHashMap.get(serverId) != null &&
+            serverDetailsUtilsConcurrentHashMap.get(serverId).getSshUtils().isAlive()){
+            return serverDetailsUtilsConcurrentHashMap.get(serverId);
+        }
+        else {
+            ServerDetailsUtils serverDetailsUtils;
+            // 根据id查询当前服务器信息
+            ServerInfo serverInfo = baseMapper.selectById(serverId);
+            // 创建当前服务器的指令集对象
+            if (serverInfo.getOperatingSystem().toLowerCase().contains("ubuntu")){
+                serverDetailsUtils = ServerDetailsFactory.create(OSEnum.UBUNTU);
+            }
+            else {
+                return null;
+            }
+            // 连接服务器
+            boolean connect = serverDetailsUtils.connect(serverInfo.getIp(), serverInfo.getPort(),
+                    serverInfo.getLoginUsername(), serverInfo.getLoginPassword());
+            if (connect){
+                // 如果连接成功则存入缓存中
+                serverDetailsUtilsConcurrentHashMap.put(serverId, serverDetailsUtils);
+                return serverDetailsUtils;
+            }
+            else {
+                return null;
+            }
         }
     }
 }
