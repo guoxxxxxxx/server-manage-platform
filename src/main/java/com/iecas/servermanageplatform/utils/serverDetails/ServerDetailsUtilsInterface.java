@@ -43,4 +43,12 @@ public interface ServerDetailsUtilsInterface {
      * @return 服务器硬件信息
      */
     ServerHardwareInfo getServerHardwareInfo();
+
+
+    /**
+     * 关闭服务器
+     * @param password 当前服务器管理员密码
+     * @return 关闭结果
+     */
+    boolean shutdown(String password);
 }

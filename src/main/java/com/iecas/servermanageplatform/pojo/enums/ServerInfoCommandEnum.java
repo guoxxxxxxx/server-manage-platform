@@ -15,7 +15,8 @@ public enum ServerInfoCommandEnum {
             "lscpu | grep \"Model name:\"",
             "cat /etc/os-release | grep PRETTY_NAME=",
             "free -k | grep Mem:",
-            "df -k /home"
+            "df -k /home",
+            "echo '%s' | sudo -S shutdown"
     );
 
     private String CPU;
@@ -26,10 +27,13 @@ public enum ServerInfoCommandEnum {
 
     private String MEM;
 
-    ServerInfoCommandEnum(String CPU, String OS, String MEM, String DISK){
+    private String SHUTDOWN;
+
+    ServerInfoCommandEnum(String CPU, String OS, String MEM, String DISK, String SHUTDOWN){
         this.CPU = CPU;
         this.OS = OS;
         this.MEM = MEM;
         this.DISK = DISK;
+        this.SHUTDOWN = SHUTDOWN;
     }
 }
