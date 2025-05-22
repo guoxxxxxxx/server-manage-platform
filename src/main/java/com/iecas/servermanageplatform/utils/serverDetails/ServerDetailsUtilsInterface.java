@@ -51,4 +51,19 @@ public interface ServerDetailsUtilsInterface {
      * @return 关闭结果
      */
     boolean shutdown(String password);
+
+
+    /**
+     * 取消服务器关机
+     * @return 取消结果
+     */
+    boolean cancelShutDown();
+
+
+    /**
+     * 重启服务器
+     * @param password 当前服务器管理员密码
+     * @return 重启结果
+     */
+    boolean reboot(String password);
 }

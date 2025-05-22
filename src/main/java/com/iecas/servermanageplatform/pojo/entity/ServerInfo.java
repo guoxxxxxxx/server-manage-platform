@@ -166,5 +166,11 @@ public class ServerInfo implements Serializable {
      * 端口号
      */
     private String port;
+
+
+    /**
+     * 默认账户密码是否正确
+     */
+    private Boolean pwdIsCorrect;
 }
 

@@ -124,4 +124,8 @@ public class TbServerInfo {
     @Comment("端口号")
     @Column(name = "port", columnDefinition = "varchar(16) default '22'")
     private String port;
+
+    @Comment("默认密码是否正确")
+    @Column(name = "pwd_is_correct", columnDefinition = "TINYINT(1) DEFAULT 0")
+    private Boolean pwdIsCorrect;
 }

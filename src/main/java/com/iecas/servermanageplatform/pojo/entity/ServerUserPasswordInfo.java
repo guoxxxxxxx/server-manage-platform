@@ -60,6 +60,11 @@ public class ServerUserPasswordInfo implements Serializable {
      * 用户id
      */
     private Long userId;
+
+    /**
+     * 密码是否正确
+     */
+    private Boolean isCorrect;
     
 }
 

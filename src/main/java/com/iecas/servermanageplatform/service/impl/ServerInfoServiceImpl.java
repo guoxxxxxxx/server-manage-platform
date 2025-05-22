@@ -15,19 +15,21 @@ import com.iecas.servermanageplatform.pojo.entity.ServerInfo;
 import com.iecas.servermanageplatform.pojo.entity.ServerUserPasswordInfo;
 import com.iecas.servermanageplatform.pojo.entity.UserInfo;
 import com.iecas.servermanageplatform.pojo.enums.OSEnum;
+import com.iecas.servermanageplatform.pojo.enums.ServerStatusEnum;
 import com.iecas.servermanageplatform.pojo.vo.AddServerInfoVO;
 import com.iecas.servermanageplatform.service.ServerInfoService;
 import com.iecas.servermanageplatform.service.ServerUserPasswordInfoService;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsFactory;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsUtils;
+import com.iecas.servermanageplatform.utils.serverDetails.ServerOnlineChecker;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import net.schmizz.sshj.transport.TransportException;
+import net.schmizz.sshj.userauth.UserAuthException;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -72,7 +74,8 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             }
             // 判断当前信息是否已经被存入过 根据主机ip来进行判断, 当二者都相等时, 则认为当前机器已经被添加过
             ServerInfo existServerInfo = baseMapper.selectOne(new LambdaQueryWrapper<ServerInfo>()
-                    .eq(ServerInfo::getIp, serverInfo.getIp()));
+                    .eq(ServerInfo::getIp, serverInfo.getIp())
+                    .eq(ServerInfo::getPort, serverInfo.getPort()));
             if (existServerInfo == null){
                 // 更新用户信息
                 serverInfo.setUserId(currentUser.getId());
@@ -151,9 +154,18 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             serverDetailsUtils = ServerDetailsFactory.create(OSEnum.UBUNTU);
         }
 
+        // 密码是否正确
+        boolean pwdIsCorrect = true;
+
         // 连接ssh
-        serverDetailsUtils.connect(serverInfo.getIp(), Integer.parseInt(serverInfo.getPort()),
-                serverInfo.getLoginUsername(), serverInfo.getLoginPassword());
+        try {
+            serverDetailsUtils.connect(serverInfo.getIp(), Integer.parseInt(serverInfo.getPort()),
+                    serverInfo.getLoginUsername(), serverInfo.getLoginPassword());
+        } catch (UserAuthException userAuthException){
+            pwdIsCorrect = false;
+            log.debug("当前服务器密码错误!");
+        }
+
         // 获取硬件信息
         ServerHardwareInfo serverHardwareInfo = serverDetailsUtils.getServerHardwareInfo();
         // 将信息进行更新
@@ -164,6 +176,7 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
         serverInfo.setMemorySpace(serverHardwareInfo.getTotalMemSpace());
         serverInfo.setFreeMemorySpace(serverHardwareInfo.getFreeMemSpace());
         serverInfo.setLastUpdate(new Date());
+        serverInfo.setPwdIsCorrect(pwdIsCorrect);
         baseMapper.updateById(serverInfo);
         return true;
     }
@@ -244,7 +257,129 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             log.debug("服务器指令集对象连接失败!");
             throw new WarningTipsException("连接服务器失败");
         }
+        // 更新服务器信息为准备关机
+        serverInfo.setStatus(ServerStatusEnum.SHUTDOWN.getStatus());
+        baseMapper.updateById(serverInfo);
         return serverDetailsUtilsByServerId.shutdown(serverInfo.getLoginPassword());
+    }
+
+
+    @Override
+    public boolean cancelShutdownById(Long serverId) {
+        ServerDetailsUtils serverDetailsUtilsByServerId = getServerDetailsUtilsByServerId(serverId);
+        if (serverDetailsUtilsByServerId == null){
+            log.debug("服务器指令集对象连接失败!");
+            throw new WarningTipsException("连接服务器失败");
+        }
+        // 执行取消关机指令
+        boolean b = serverDetailsUtilsByServerId.cancelShutDown();
+        // 更新服务器状态
+        baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
+                .eq(ServerInfo::getId, serverId)
+                .set(b, ServerInfo::getStatus, ServerStatusEnum.ONLINE.getStatus()));
+        return b;
+    }
+
+
+    @Override
+    public boolean rebootById(Long serverId) {
+        // 判断服务器状态
+        ServerInfo serverInfo = baseMapper.selectById(serverId);
+        if (!serverInfo.getStatus().toLowerCase().equals("在线")){
+            log.debug("服务器未在线, 重启失败!");
+            return false;
+        }
+        // 获取当前服务器指令集对象
+        ServerDetailsUtils serverDetailsUtils = getServerDetailsUtilsByServerId(serverId);
+        // 重启服务器
+        boolean reboot = serverDetailsUtils.reboot(serverInfo.getLoginPassword());
+        // 更新服务器信息
+        if (reboot) {
+            baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
+                    .eq(ServerInfo::getId, serverId)
+                    .set(ServerInfo::getStatus, "重启中"));
+        }
+        else {
+            log.info("重启服务器失败, 可能的原因: 默认用户名密码错误!");
+        }
+        return reboot;
+    }
+
+
+    @Override
+    public Map<String, Object> shutdownByIds(List<Long> serverIdList) {
+        // 将要关闭的服务器的信息列表
+        List<ServerInfo> allServerInfoList;
+        if (serverIdList == null || serverIdList.isEmpty()){
+            allServerInfoList = baseMapper.selectList(null);
+        }
+        else {
+            allServerInfoList = baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
+                    .in(ServerInfo::getId, serverIdList));
+        }
+        // 用于存储结果
+        Map<String, Object> result = new HashMap<>();
+        List<String> failList = new ArrayList<>();
+        List<String> successList = new ArrayList<>();
+        for (ServerInfo e: allServerInfoList){
+            // 检查当前服务器是否在线或密码是否正确 若不在线或密码错误则直接跳过该服务器
+            if (!e.getStatus().equals("在线")){
+                failList.add("服务器: " + e.getIp() + ":" + e.getPort() + " 关闭失败, 原因: 当前服务器未在线！" );
+                continue;
+            }
+            else if(!e.getPwdIsCorrect()){
+                failList.add("服务器: " + e.getIp() + ":" + e.getPort() + " 关闭失败, 原因: 当前服务器用户名密码错误！" );
+                continue;
+            }
+            // 获取当前服务器的会话对象
+            ServerDetailsUtils currentServerSession = getServerDetailsUtilsByServerId(e.getId());
+            boolean shutdown = currentServerSession.shutdown(e.getLoginPassword());
+            if (shutdown){
+                successList.add("服务器: " + e.getIp() + ":" + e.getPort() + " 关闭成功, 服务器将在60s内关闭!");
+                // 修改服务器状态
+                baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
+                        .eq(ServerInfo::getId, e.getId())
+                        .set(ServerInfo::getStatus, ServerStatusEnum.SHUTDOWN.getStatus()));
+            }
+            else {
+                failList.add("服务器: " + e.getIp() + ":" + e.getPort() + " 关闭失败, 原因: 未知错误！" );
+            }
+        }
+        result.put("success", successList);
+        result.put("fail", failList);
+        return result;
+    }
+
+
+    @Override
+    public Map<String, Object> cancelShutdown() {
+        // 获取所有服务器信息
+        List<ServerInfo> serverInfoList = baseMapper.selectList(null);
+        List<ServerInfo> successList = new ArrayList<>();
+        List<ServerInfo> failList = new ArrayList<>();
+        // 检查服务器状态是否为待关闭状态
+        for (ServerInfo e : serverInfoList){
+            try {
+                // 如果是则获取到相应的对象，并取消关闭服务器
+                if (e.getStatus().equals(ServerStatusEnum.SHUTDOWN.getStatus())) {
+                    // 获取服务器控制端对象 并 取消关闭服务器
+                    ServerDetailsUtils serverDetailsUtils = getServerDetailsUtilsByServerId(e.getId());
+                    serverDetailsUtils.cancelShutDown();
+                    // 更新数据库中的状态信息
+                    baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
+                            .eq(ServerInfo::getId, e.getId())
+                            .set(ServerInfo::getStatus, ServerStatusEnum.ONLINE));
+                    successList.add(e);
+                }
+            } catch (Exception exception){
+                log.error("取消关闭服务器异常", exception);
+                failList.add(e);
+            }
+        }
+        Map<String, Object> result = new HashMap<>();
+        result.put("fail", failList);
+        result.put("success", successList);
+        return result;
     }
 
 
@@ -257,7 +392,9 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
         ServerDetailsUtils serverDetailsUtils = ServerDetailsFactory.create(OSEnum.UBUNTU);
 
         // 是否链接成功
-        boolean connect;
+        boolean connect = false;
+        // 密码是否正确
+        boolean pwdIsCorrect = true;
 
         // 判断缓存中是否有当前对象的链接
         if (serverDetailsUtilsConcurrentHashMap.get(e.getId()) != null
@@ -266,7 +403,12 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             connect = true;
         }
         else{
-            connect = serverDetailsUtils.connect(e.getIp(), e.getPort(), e.getLoginUsername(), e.getLoginPassword());
+            try {
+                connect = serverDetailsUtils.connect(e.getIp(), e.getPort(), e.getLoginUsername(), e.getLoginPassword());
+            } catch (UserAuthException userAuthException){
+                // 密码错误, 修改数据库标识
+                pwdIsCorrect = false;
+            }
             // 如果链接成功 则存入缓存
             if (connect) {
                 serverDetailsUtilsConcurrentHashMap.put(e.getId(), serverDetailsUtils);
@@ -291,13 +433,17 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
                     .set(ServerInfo::getMemorySpace, serverHardwareInfo.getTotalMemSpace())
                     .set(ServerInfo::getFreeMemorySpace, serverHardwareInfo.getFreeMemSpace())
                     .set(ServerInfo::getLastUpdate, new Date())
-                    .set(ServerInfo::getStatus, "在线")
+                    .set(e.getStatus() == null || !e.getStatus().equalsIgnoreCase(ServerStatusEnum.SHUTDOWN.getStatus()) || e.getStatus().isEmpty(), ServerInfo::getStatus, "在线")
+                    .set(ServerInfo::getPwdIsCorrect, pwdIsCorrect)
             );
         }
         else {
+            // 检查当前服务器是否在线
+            boolean isOnline = ServerOnlineChecker.isPortOpen(e.getIp(), e.getPort(), 500);
             baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
                     .eq(ServerInfo::getId, e.getId())
-                    .set(ServerInfo::getStatus, "离线")
+                    .set(!e.getStatus().equalsIgnoreCase(ServerStatusEnum.SHUTDOWN.getStatus()) || !isOnline || e.getStatus().isEmpty(), ServerInfo::getStatus, isOnline ? "在线" : "离线")
+                    .set(ServerInfo::getPwdIsCorrect, pwdIsCorrect)
                     .set(ServerInfo::getLastUpdate, new Date()));
         }
     }
@@ -326,15 +472,21 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             else {
                 return null;
             }
-            // 连接服务器
-            boolean connect = serverDetailsUtils.connect(serverInfo.getIp(), serverInfo.getPort(),
-                    serverInfo.getLoginUsername(), serverInfo.getLoginPassword());
-            if (connect){
-                // 如果连接成功则存入缓存中
-                serverDetailsUtilsConcurrentHashMap.put(serverId, serverDetailsUtils);
-                return serverDetailsUtils;
-            }
-            else {
+            try {
+                // 连接服务器
+                boolean connect = serverDetailsUtils.connect(serverInfo.getIp(), serverInfo.getPort(),
+                        serverInfo.getLoginUsername(), serverInfo.getLoginPassword());
+
+                if (connect){
+                    // 如果连接成功则存入缓存中
+                    serverDetailsUtilsConcurrentHashMap.put(serverId, serverDetailsUtils);
+                    return serverDetailsUtils;
+                }
+                else {
+                    return null;
+                }
+            } catch (UserAuthException userAuthException){
+                log.error("当前服务器用户名密码错误");
                 return null;
             }
         }
