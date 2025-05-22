@@ -6,7 +6,9 @@ import com.iecas.servermanageplatform.pojo.dto.QueryServerInfoDTO;
 import com.iecas.servermanageplatform.pojo.entity.ServerInfo;
 import com.iecas.servermanageplatform.pojo.vo.AddServerInfoVO;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * (ServerInfo)表服务接口
@@ -73,5 +75,35 @@ public interface ServerInfoService extends IService<ServerInfo> {
      * @return
      */
     boolean shutdownById(Long serverId);
+
+
+    /**
+     * 根据服务器id取消关闭服务器
+     * @param serverId 服务器id
+     * @return 取消关闭结果
+     */
+    boolean cancelShutdownById(Long serverId);
+
+
+    /**
+     * 根据服务器id重启服务器
+     * @param serverId  服务器id
+     * @return 重启结果
+     */
+    boolean rebootById(Long serverId);
+
+
+    /**
+     * 关闭所有服务器
+     * @return 关闭结果
+     */
+    Map<String, Object> shutdownByIds(List<Long> serverIdList);
+
+
+    /**
+     * 取消所有服务器的关闭
+     * @return 取消关闭结果
+     */
+    Map<String, Object> cancelShutdown();
 }
 

@@ -42,4 +42,8 @@ public class TbServerUserPasswordInfo {
     @Comment("对应用户的id")
     @Column(name = "user_id")
     private Long userId;
+
+    @Comment("密码是否正确")
+    @Column(name = "is_correct", columnDefinition = "TINYINT(1) DEFAULT 0")
+    private Boolean isCorrect;
 }

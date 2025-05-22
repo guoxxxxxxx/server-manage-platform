@@ -14,8 +14,10 @@ import com.iecas.servermanageplatform.service.ServerInfoService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * (ServerInfo)表控制层
@@ -86,6 +88,42 @@ public class ServerInfoController {
     @PostMapping("/shutdownById")
     public CommonResult shutdownById(@RequestBody Long serverId){
         boolean result = serverInfoService.shutdownById(serverId);
+        return new CommonResult().data(result).success();
+    }
+
+
+    @Auth
+    @Logger("取消关机")
+    @PostMapping("/cancelShutdownById")
+    public CommonResult cancelShutdownById(@RequestBody Long serverId){
+        boolean result = serverInfoService.cancelShutdownById(serverId);
+        return new CommonResult().data(result).success();
+    }
+
+
+    @Auth
+    @Logger("根据id重启服务器")
+    @PostMapping("/rebootById")
+    public CommonResult rebootById(@RequestBody Long serverId){
+        boolean result = serverInfoService.rebootById(serverId);
+        return new CommonResult().data(result).success();
+    }
+
+
+    @Auth
+    @Logger("关闭服务器")
+    @PostMapping("/shutdownByIds")
+    public CommonResult shutdownByIds(@RequestBody List<Long> serverIdList){
+        Map<String, Object> result = serverInfoService.shutdownByIds(serverIdList);
+        return new CommonResult().data(result).success();
+    }
+
+
+    @Auth
+    @Logger("取消关闭所有服务器")
+    @PostMapping("/cancelShutdown")
+    public CommonResult cancelShutdown(){
+        Map<String, Object> result = serverInfoService.cancelShutdown();
         return new CommonResult().data(result).success();
     }
 }

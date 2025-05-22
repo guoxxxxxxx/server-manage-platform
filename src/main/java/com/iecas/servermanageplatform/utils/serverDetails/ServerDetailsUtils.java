@@ -1,6 +1,7 @@
 package com.iecas.servermanageplatform.utils.serverDetails;
 
 import com.iecas.servermanageplatform.utils.SSHUtils;
+import net.schmizz.sshj.userauth.UserAuthException;
 
 /**
  * @Author: guo_x
@@ -20,7 +21,7 @@ public abstract class ServerDetailsUtils implements ServerDetailsUtilsInterface{
      * @param password 密码
      * @return true:连接成功 false:连接失败
      */
-    public boolean connect(String host, int port, String username, String password){
+    public boolean connect(String host, int port, String username, String password) throws UserAuthException {
         sshUtils = new SSHUtils(host, port, username, password);
         return sshUtils.connect();
     }
@@ -34,7 +35,7 @@ public abstract class ServerDetailsUtils implements ServerDetailsUtilsInterface{
      * @param password 密码
      * @return true:连接成功 false:连接失败
      */
-    public boolean connect(String host, String port, String username, String password){
+    public boolean connect(String host, String port, String username, String password) throws UserAuthException {
         sshUtils = new SSHUtils(host, Integer.parseInt(port), username, password);
         return sshUtils.connect();
     }

@@ -16,7 +16,9 @@ public enum ServerInfoCommandEnum {
             "cat /etc/os-release | grep PRETTY_NAME=",
             "free -k | grep Mem:",
             "df -k /home",
-            "echo '%s' | sudo -S shutdown"
+            "echo '%s' | sudo -S shutdown",
+            "shutdown -c",
+            "echo '%s' | sudo -S reboot"
     );
 
     private String CPU;
@@ -29,11 +31,18 @@ public enum ServerInfoCommandEnum {
 
     private String SHUTDOWN;
 
-    ServerInfoCommandEnum(String CPU, String OS, String MEM, String DISK, String SHUTDOWN){
+    private String CANCEL_SHUTDOWN;
+
+    private String REBOOT;
+
+    ServerInfoCommandEnum(String CPU, String OS, String MEM, String DISK, String SHUTDOWN, String CANCEL_SHUTDOWN,
+                          String REBOOT){
         this.CPU = CPU;
         this.OS = OS;
         this.MEM = MEM;
         this.DISK = DISK;
         this.SHUTDOWN = SHUTDOWN;
+        this.CANCEL_SHUTDOWN = CANCEL_SHUTDOWN;
+        this.REBOOT = REBOOT;
     }
 }
