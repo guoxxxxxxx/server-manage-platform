@@ -352,9 +352,18 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
 
     @Override
-    public Map<String, Object> cancelShutdown() {
-        // 获取所有服务器信息
-        List<ServerInfo> serverInfoList = baseMapper.selectList(null);
+    public Map<String, Object> cancelShutdown(List<Long> serverIdList) {
+        List<ServerInfo> serverInfoList;
+        // 判断是否为关闭所有服务器
+        if (serverIdList == null || serverIdList.isEmpty()){
+            // 获取所有服务器信息
+            serverInfoList = baseMapper.selectList(null);
+        }
+        else{
+            // 获取需要关闭的服务器列表
+            serverInfoList = baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
+                    .in(ServerInfo::getId, serverIdList));
+        }
         List<ServerInfo> successList = new ArrayList<>();
         List<ServerInfo> failList = new ArrayList<>();
         // 检查服务器状态是否为待关闭状态
@@ -368,7 +377,7 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
                     // 更新数据库中的状态信息
                     baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
                             .eq(ServerInfo::getId, e.getId())
-                            .set(ServerInfo::getStatus, ServerStatusEnum.ONLINE));
+                            .set(ServerInfo::getStatus, ServerStatusEnum.ONLINE.getStatus()));
                     successList.add(e);
                 }
             } catch (Exception exception){

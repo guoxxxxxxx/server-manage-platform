@@ -104,6 +104,6 @@ public interface ServerInfoService extends IService<ServerInfo> {
      * 取消所有服务器的关闭
      * @return 取消关闭结果
      */
-    Map<String, Object> cancelShutdown();
+    Map<String, Object> cancelShutdown(List<Long> serverIdList);
 }
 

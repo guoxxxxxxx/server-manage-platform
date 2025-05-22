@@ -121,9 +121,9 @@ public class ServerInfoController {
 
     @Auth
     @Logger("取消关闭所有服务器")
-    @PostMapping("/cancelShutdown")
-    public CommonResult cancelShutdown(){
-        Map<String, Object> result = serverInfoService.cancelShutdown();
+    @PostMapping("/cancelShutdownByIds")
+    public CommonResult cancelShutdownByIds(@RequestBody List<Long> serverIdList){
+        Map<String, Object> result = serverInfoService.cancelShutdown(serverIdList);
         return new CommonResult().data(result).success();
     }
 }
