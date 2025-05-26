@@ -60,7 +60,7 @@ public class ServerInfoController {
     @Logger("获取服务器详细信息")
     @GetMapping("/getServerInfo")
     public CommonResult getServerInfo(@RequestParam Integer id){
-        ServerInfo serverInfo = serverInfoService.getById(id);
+        ServerInfo serverInfo = serverInfoService.getByIdEncryPwd(id);
         return new CommonResult().data(serverInfo).success();
     }
 
@@ -124,6 +124,15 @@ public class ServerInfoController {
     @PostMapping("/cancelShutdownByIds")
     public CommonResult cancelShutdownByIds(@RequestBody List<Long> serverIdList){
         Map<String, Object> result = serverInfoService.cancelShutdown(serverIdList);
+        return new CommonResult().data(result).success();
+    }
+
+
+    @Auth
+    @Logger("根据id更新服务器信息")
+    @PostMapping("/updateServerInfoById")
+    public CommonResult updateServerInfoById(@RequestBody ServerInfo serverInfo){
+        boolean result = serverInfoService.updateServerInfoById(serverInfo);
         return new CommonResult().data(result).success();
     }
 }

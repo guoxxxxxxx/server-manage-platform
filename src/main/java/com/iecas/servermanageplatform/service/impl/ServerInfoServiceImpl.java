@@ -131,7 +131,27 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     @Override
     public IPage<ServerInfo> getPage(QueryServerInfoDTO dto) {
-        return baseMapper.selectPage(new Page<>(dto.getPageNo(), dto.getPageSize()), null);
+        List<String> onlineStatus = new ArrayList<>();
+        onlineStatus.add(ServerStatusEnum.ONLINE.getStatus());
+        onlineStatus.add(ServerStatusEnum.SHUTDOWN.getStatus());
+        LambdaQueryWrapper<ServerInfo> queryWrapper = new LambdaQueryWrapper<ServerInfo>()
+                .in(dto.isOnlyShowOnline(), ServerInfo::getStatus, onlineStatus)
+                .like(!dto.getQueryParams().isEmpty(), ServerInfo::getId, dto.getQueryParams())
+                .or()
+                .like(!dto.getQueryParams().isEmpty(), ServerInfo::getStatus, dto.getQueryParams())
+                .or()
+                .like(!dto.getQueryParams().isEmpty(), ServerInfo::getIp, dto.getQueryParams())
+                .or()
+                .like(!dto.getQueryParams().isEmpty(), ServerInfo::getPort, dto.getQueryParams())
+                .or()
+                .like(!dto.getQueryParams().isEmpty(), ServerInfo::getCpu, dto.getQueryParams())
+                .or()
+                .like(!dto.getQueryParams().isEmpty(), ServerInfo::getName, dto.getQueryParams())
+                .or()
+                .like(!dto.getQueryParams().isEmpty(), ServerInfo::getOperatingSystem, dto.getQueryParams())
+                .or()
+                .like(!dto.getQueryParams().isEmpty(), ServerInfo::getOwner, dto.getQueryParams());
+        return baseMapper.selectPage(new Page<>(dto.getPageNo(), dto.getPageSize()), queryWrapper);
     }
 
 
@@ -389,6 +409,40 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
         result.put("fail", failList);
         result.put("success", successList);
         return result;
+    }
+
+
+    @Override
+    public ServerInfo getByIdEncryPwd(Integer id) {
+        // 获取当前登录用户信息
+        UserInfo userInfo = UserThreadLocal.getUserInfo();
+        // 根据id查询服务器信息
+        ServerInfo serverInfo = baseMapper.selectById(id);
+        // 判断当前用户是否为管理员
+        if (userInfo.getRoleId() <= 3){
+            return serverInfo;
+        }
+        // 判断当前用户是否为当前服务器信息上传者
+        else if (Objects.equals(serverInfo.getUserId(), userInfo.getId())){
+            return serverInfo;
+        }
+        // 否则隐藏密码
+        else {
+            serverInfo.setLoginPassword("当前用户权限不足!");
+            return serverInfo;
+        }
+    }
+
+
+    @Override
+    public boolean updateServerInfoById(ServerInfo serverInfo) {
+        // 判断当前用户是否有更新权限
+        UserInfo userInfo = UserThreadLocal.getUserInfo();
+        if (userInfo.getRoleId() <= 3 || serverInfo.getUserId() == userInfo.getId()){
+            int i = baseMapper.updateById(serverInfo);
+            return i == 1;
+        }
+        return false;
     }
 
 

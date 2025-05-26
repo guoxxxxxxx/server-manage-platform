@@ -105,5 +105,21 @@ public interface ServerInfoService extends IService<ServerInfo> {
      * @return 取消关闭结果
      */
     Map<String, Object> cancelShutdown(List<Long> serverIdList);
+
+
+    /**
+     * 根据id查询服务器信息 加密服务器密码
+     * @param id id
+     * @return 服务器信息
+     */
+    ServerInfo getByIdEncryPwd(Integer id);
+
+
+    /**
+     * 根据id更新服务器信息
+     * @param serverInfo 服务器信息
+     * @return 更新结果
+     */
+    boolean updateServerInfoById(ServerInfo serverInfo);
 }
 
