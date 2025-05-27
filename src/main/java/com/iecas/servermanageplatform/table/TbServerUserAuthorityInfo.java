@@ -32,7 +32,7 @@ public class TbServerUserAuthorityInfo {
     private Long serverId;
 
     @Comment("是否可以访问")
-    @Column(name = "can_access")
+    @Column(name = "can_access", columnDefinition = "TINYINT(1)")
     private Boolean canAccess;
 
     @Comment("是否删除")

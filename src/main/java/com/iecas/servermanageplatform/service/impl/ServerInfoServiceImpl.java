@@ -10,14 +10,12 @@ import com.iecas.servermanageplatform.dao.ServerInfoDao;
 import com.iecas.servermanageplatform.exception.CommonException;
 import com.iecas.servermanageplatform.exception.WarningTipsException;
 import com.iecas.servermanageplatform.pojo.dto.QueryServerInfoDTO;
-import com.iecas.servermanageplatform.pojo.entity.ServerHardwareInfo;
-import com.iecas.servermanageplatform.pojo.entity.ServerInfo;
-import com.iecas.servermanageplatform.pojo.entity.ServerUserPasswordInfo;
-import com.iecas.servermanageplatform.pojo.entity.UserInfo;
+import com.iecas.servermanageplatform.pojo.entity.*;
 import com.iecas.servermanageplatform.pojo.enums.OSEnum;
 import com.iecas.servermanageplatform.pojo.enums.ServerStatusEnum;
 import com.iecas.servermanageplatform.pojo.vo.AddServerInfoVO;
 import com.iecas.servermanageplatform.service.ServerInfoService;
+import com.iecas.servermanageplatform.service.ServerUserAuthorityInfoService;
 import com.iecas.servermanageplatform.service.ServerUserPasswordInfoService;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsFactory;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsUtils;
@@ -26,6 +24,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.userauth.UserAuthException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
@@ -50,6 +49,11 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     @Resource
     private ServerUserPasswordInfoService serverUserPasswordInfoService;
+
+    @Resource
+    private ServerUserAuthorityInfoService serverUserAuthorityInfoService;
+    @Autowired
+    private UserInfoServiceImpl userInfoService;
 
 
     @Override
@@ -263,6 +267,9 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     @Override
     public boolean shutdownById(Long serverId) {
+        // 鉴权
+        if (!auth(serverId))
+            throw new WarningTipsException("当前用户无权限！");
         // 查询当前服务器信息
         ServerInfo serverInfo = baseMapper.selectById(serverId);
         // 判断当前服务器是否在线
@@ -286,6 +293,10 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     @Override
     public boolean cancelShutdownById(Long serverId) {
+        // 判断当前用户是否有权限
+        if (!auth(serverId)){
+            throw new WarningTipsException("当前用户无权限");
+        }
         ServerDetailsUtils serverDetailsUtilsByServerId = getServerDetailsUtilsByServerId(serverId);
         if (serverDetailsUtilsByServerId == null){
             log.debug("服务器指令集对象连接失败!");
@@ -303,6 +314,10 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     @Override
     public boolean rebootById(Long serverId) {
+        // 判断当前用户是否有权限
+        if (!auth(serverId)){
+            throw new WarningTipsException("当前用户无权限");
+        }
         // 判断服务器状态
         ServerInfo serverInfo = baseMapper.selectById(serverId);
         if (!serverInfo.getStatus().toLowerCase().equals("在线")){
@@ -328,6 +343,11 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     @Override
     public Map<String, Object> shutdownByIds(List<Long> serverIdList) {
+        // 判断当前用户是否为管理员
+        UserInfo currentUser = UserThreadLocal.getUserInfo();
+        if (currentUser.getRoleId() > 3){
+            throw new WarningTipsException("此功能仅对管理员开放!");
+        }
         // 将要关闭的服务器的信息列表
         List<ServerInfo> allServerInfoList;
         if (serverIdList == null || serverIdList.isEmpty()){
@@ -373,6 +393,11 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     @Override
     public Map<String, Object> cancelShutdown(List<Long> serverIdList) {
+        // 判断当前用户是否为管理员
+        UserInfo currentUser = UserThreadLocal.getUserInfo();
+        if (currentUser.getRoleId() > 3){
+            throw new WarningTipsException("此功能仅对管理员开放!");
+        }
         List<ServerInfo> serverInfoList;
         // 判断是否为关闭所有服务器
         if (serverIdList == null || serverIdList.isEmpty()){
@@ -413,17 +438,13 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
 
     @Override
-    public ServerInfo getByIdEncryPwd(Integer id) {
+    public ServerInfo getByIdEncryPwd(Long id) {
         // 获取当前登录用户信息
         UserInfo userInfo = UserThreadLocal.getUserInfo();
         // 根据id查询服务器信息
         ServerInfo serverInfo = baseMapper.selectById(id);
-        // 判断当前用户是否为管理员
-        if (userInfo.getRoleId() <= 3){
-            return serverInfo;
-        }
-        // 判断当前用户是否为当前服务器信息上传者
-        else if (Objects.equals(serverInfo.getUserId(), userInfo.getId())){
+        // 判断当前用户是否有权限
+        if (auth(id)){
             return serverInfo;
         }
         // 否则隐藏密码
@@ -437,14 +458,47 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
     @Override
     public boolean updateServerInfoById(ServerInfo serverInfo) {
         // 判断当前用户是否有更新权限
-        UserInfo userInfo = UserThreadLocal.getUserInfo();
-        if (userInfo.getRoleId() <= 3 || serverInfo.getUserId() == userInfo.getId()){
+        if (auth(serverInfo.getId())){
             int i = baseMapper.updateById(serverInfo);
             return i == 1;
         }
-        return false;
+        else {
+            throw new WarningTipsException("当前用户无权限！");
+        }
     }
 
+
+    @Override
+    public boolean auth(Long serverId, Long userId) {
+        UserInfo currentUser = userInfoService.getById(userId);
+        // 判断当前用户是否为管理员
+        if (currentUser.getRoleId() <= 3){
+            return true;
+        }
+        // 判断当前用户是否有对应服务器的操作权限
+        else {
+            // 查询给定id的服务器信息
+            ServerInfo currentServerInfo = baseMapper.selectById(serverId);
+            // 判断当前服务器信息是否为当前用户上传
+            if (currentServerInfo.getUserId() == currentUser.getId()){
+                return true;
+            }
+            else {
+                // TODO 从tb_server_user_authority_info数据库中查询当前用户是否有对应的操作权限
+                // 查询当前服务器对应的当前用户的权限信息记录
+                List<ServerUserAuthorityInfo> authorityInfo = serverUserAuthorityInfoService.list(new LambdaQueryWrapper<ServerUserAuthorityInfo>()
+                        .eq(ServerUserAuthorityInfo::getServerId, serverId)
+                        .eq(ServerUserAuthorityInfo::getUserId, currentServerInfo.getId()));
+                // 若authorityInfo为空或其caAccess属性为false则无访问权限
+                if (authorityInfo == null || authorityInfo.isEmpty() || authorityInfo.get(0).isCanAccess()){
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            }
+        }
+    }
 
     /**
      * 更新单个服务器信息
@@ -551,6 +605,42 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             } catch (UserAuthException userAuthException){
                 log.error("当前服务器用户名密码错误");
                 return null;
+            }
+        }
+    }
+
+
+    /**
+     * 统一鉴权, 判断当前用户是否拥有对应服务器的使用权限
+     * @return true: 鉴权成功, false: 鉴权失败
+     */
+    public boolean auth(Long serverId){
+        UserInfo currentUser = UserThreadLocal.getUserInfo();
+        // 判断当前用户是否为管理员
+        if (currentUser.getRoleId() <= 3){
+            return true;
+        }
+        // 判断当前用户是否有对应服务器的操作权限
+        else {
+            // 查询给定id的服务器信息
+            ServerInfo currentServerInfo = baseMapper.selectById(serverId);
+            // 判断当前服务器信息是否为当前用户上传
+            if (currentServerInfo.getUserId() == currentUser.getId()){
+                return true;
+            }
+            else {
+                // TODO 从tb_server_user_authority_info数据库中查询当前用户是否有对应的操作权限
+                // 查询当前服务器对应的当前用户的权限信息记录
+                List<ServerUserAuthorityInfo> authorityInfo = serverUserAuthorityInfoService.list(new LambdaQueryWrapper<ServerUserAuthorityInfo>()
+                        .eq(ServerUserAuthorityInfo::getServerId, serverId)
+                        .eq(ServerUserAuthorityInfo::getUserId, currentServerInfo.getId()));
+                // 若authorityInfo为空或其caAccess属性为false则无访问权限
+                if (authorityInfo == null || authorityInfo.isEmpty() || authorityInfo.get(0).isCanAccess()){
+                    return false;
+                }
+                else {
+                    return true;
+                }
             }
         }
     }

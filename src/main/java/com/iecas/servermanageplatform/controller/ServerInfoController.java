@@ -59,7 +59,7 @@ public class ServerInfoController {
     @Auth
     @Logger("获取服务器详细信息")
     @GetMapping("/getServerInfo")
-    public CommonResult getServerInfo(@RequestParam Integer id){
+    public CommonResult getServerInfo(@RequestParam Long id){
         ServerInfo serverInfo = serverInfoService.getByIdEncryPwd(id);
         return new CommonResult().data(serverInfo).success();
     }

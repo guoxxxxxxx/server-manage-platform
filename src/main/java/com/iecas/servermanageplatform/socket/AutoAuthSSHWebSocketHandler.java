@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.github.lalyos.jfiglet.FigletFont;
 import com.iecas.servermanageplatform.common.SocketMessage;
+import com.iecas.servermanageplatform.exception.WarningTipsException;
 import com.iecas.servermanageplatform.pojo.entity.ServerInfo;
 import com.iecas.servermanageplatform.pojo.entity.ServerUserPasswordInfo;
 import com.iecas.servermanageplatform.pojo.entity.UserInfo;
@@ -68,6 +69,15 @@ public class AutoAuthSSHWebSocketHandler {
 
         // 解析用户token信息
         UserInfo userInfo = userInfoService.parseUserInfoByToken(token);
+
+        // 判断当前用户是否有权限
+        if (!serverInfoService.auth(Long.parseLong(serverId), userInfo.getId())){
+            sendMessage(sessionSocket, "WarningMessage", true, "当前用户无权限");
+            sendMessage(sessionSocket, "FailMessage", true, "当前用户无权限！请向管理员申请访问!");
+            log.debug("当前用户无权限");
+            return;
+        }
+
         // 获取所要链接服务器的详细信息
         ServerInfo serverInfo = serverInfoService.getById(serverId);
         // 查询当前用户所存的当前服务器的用户名与密码

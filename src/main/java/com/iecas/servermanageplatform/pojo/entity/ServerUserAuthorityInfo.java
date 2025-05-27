@@ -33,7 +33,7 @@ public class ServerUserAuthorityInfo implements Serializable {
     /**
      * 是否可以访问
      */
-    private Object canAccess;
+    private boolean canAccess;
     
     /**
      * 是否删除

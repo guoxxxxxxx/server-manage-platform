@@ -112,7 +112,7 @@ public interface ServerInfoService extends IService<ServerInfo> {
      * @param id id
      * @return 服务器信息
      */
-    ServerInfo getByIdEncryPwd(Integer id);
+    ServerInfo getByIdEncryPwd(Long id);
 
 
     /**
@@ -121,5 +121,14 @@ public interface ServerInfoService extends IService<ServerInfo> {
      * @return 更新结果
      */
     boolean updateServerInfoById(ServerInfo serverInfo);
+
+
+    /**
+     * 认证当前用户是否有权限访问当前服务器
+     * @param serverId 服务器id
+     * @param userId 用户id
+     * @return 认证结果
+     */
+    boolean auth(Long serverId, Long userId);
 }
 
