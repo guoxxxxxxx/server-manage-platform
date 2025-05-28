@@ -172,5 +172,11 @@ public class ServerInfo implements Serializable {
      * 默认账户密码是否正确
      */
     private Boolean pwdIsCorrect;
+
+
+    /**
+     * 服务器关机优先级
+     */
+    private Integer shutdownRank;
 }
 

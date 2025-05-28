@@ -2,16 +2,16 @@ package com.iecas.servermanageplatform.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.iecas.servermanageplatform.common.PageResult;
+import com.iecas.servermanageplatform.config.UserThreadLocal;
 import com.iecas.servermanageplatform.constant.RedisPrefix;
 import com.iecas.servermanageplatform.dao.UserInfoDao;
 import com.iecas.servermanageplatform.exception.CommonException;
 import com.iecas.servermanageplatform.exception.WarningTipsException;
-import com.iecas.servermanageplatform.pojo.dto.ResetPasswordDTO;
-import com.iecas.servermanageplatform.pojo.dto.UserLoginDTO;
-import com.iecas.servermanageplatform.pojo.dto.UserRegisterDTO;
-import com.iecas.servermanageplatform.pojo.dto.ValidAuthCodeDTO;
+import com.iecas.servermanageplatform.pojo.dto.*;
 import com.iecas.servermanageplatform.pojo.entity.UserInfo;
 import com.iecas.servermanageplatform.service.UserInfoService;
 import com.iecas.servermanageplatform.utils.IPUtils;
@@ -129,6 +129,10 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoDao, UserInfo> impl
             userInfo = baseMapper.selectOne(new LambdaQueryWrapper<UserInfo>()
                     .eq(UserInfo::getUsername, dto.getUsername()));
         }
+        // 判断当前用户是否被封禁
+        if (userInfo.getLocked()){
+            throw new WarningTipsException("当前用户已被封禁");
+        }
         // 判断用户名是否存在, 密码是否正确
         if (userInfo != null && userInfo.getPassword().equals(dto.getPassword())){
             // 更新用户最后一次登录时间和登录ip
@@ -187,6 +191,60 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoDao, UserInfo> impl
             return update == 1;
         }
         return false;
+    }
+
+    @Override
+    public boolean toggleLockedById(Long userId) {
+        // 查询所要解锁/封禁的用户信息
+        UserInfo willChangeUser = baseMapper.selectById(userId);
+        // 判断当前登录用户的权限等级是否高于所要解封/封禁的用户的权限等级
+        UserInfo currentUser = UserThreadLocal.getUserInfo();
+        if (currentUser.getRoleId() < willChangeUser.getRoleId()){
+            boolean currentLocked = willChangeUser.getLocked();
+            willChangeUser.setLocked(!currentLocked);
+            // 更新数据库中的信息
+            baseMapper.updateById(willChangeUser);
+            return !currentLocked;
+        }
+        else {
+            throw new WarningTipsException("当前用户无权限!");
+        }
+    }
+
+
+    @Override
+    public PageResult<UserInfo> getUserList(QueryUserInfoDTO dto) {
+        LambdaQueryWrapper<UserInfo> condition = new LambdaQueryWrapper<>();
+        if (dto.getQueryParams() != null && !dto.getQueryParams().isEmpty()){
+            condition = new LambdaQueryWrapper<UserInfo>()
+                    .like(UserInfo::getEmail, dto.getQueryParams())
+                    .or().like(UserInfo::getPhone, dto.getQueryParams())
+                    .or().like(UserInfo::getUsername, dto.getQueryParams());
+        }
+        Page<UserInfo> result = baseMapper.selectPage(new Page<>(dto.getPageNo(), dto.getPageSize()), condition);
+        // 隐藏用户密码
+        for(UserInfo e : result.getRecords()){
+            e.setPassword("******");
+        }
+
+        return new PageResult<>(result);
+    }
+
+
+    @Override
+    public boolean changeUserRole(ChangeUserRoleDTO dto) {
+        UserInfo currentUserInfo = UserThreadLocal.getUserInfo();
+        // 判断当前用户是否有权限更改权限等级
+        if (currentUserInfo.getRoleId() < dto.getRoleId() && currentUserInfo.getRoleId() <= 3){
+            LambdaUpdateWrapper<UserInfo> updateWrapper = new LambdaUpdateWrapper<UserInfo>()
+                    .eq(UserInfo::getId, dto.getTargetUserId())
+                    .set(UserInfo::getRoleId, dto.getRoleId());
+            int update = baseMapper.update(updateWrapper);
+            return update == 1;
+        }
+        else {
+            throw new WarningTipsException("当前用户无权限!");
+        }
     }
 
 

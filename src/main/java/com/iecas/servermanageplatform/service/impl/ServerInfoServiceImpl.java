@@ -357,6 +357,8 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             allServerInfoList = baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
                     .in(ServerInfo::getId, serverIdList));
         }
+        // 对所要关闭的服务器按照优先级等级进行排序, 数值越大的越先关机
+        allServerInfoList.sort(Comparator.comparing(ServerInfo::getShutdownRank).reversed());
         // 用于存储结果
         Map<String, Object> result = new HashMap<>();
         List<String> failList = new ArrayList<>();
@@ -439,8 +441,6 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     @Override
     public ServerInfo getByIdEncryPwd(Long id) {
-        // 获取当前登录用户信息
-        UserInfo userInfo = UserThreadLocal.getUserInfo();
         // 根据id查询服务器信息
         ServerInfo serverInfo = baseMapper.selectById(id);
         // 判断当前用户是否有权限
@@ -471,6 +471,10 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
     @Override
     public boolean auth(Long serverId, Long userId) {
         UserInfo currentUser = userInfoService.getById(userId);
+        // 判断当前用户是否被封禁
+        if(currentUser.getLocked()){
+            return false;
+        }
         // 判断当前用户是否为管理员
         if (currentUser.getRoleId() <= 3){
             return true;
@@ -616,6 +620,10 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
      */
     public boolean auth(Long serverId){
         UserInfo currentUser = UserThreadLocal.getUserInfo();
+        // 判断当前用户是否被封禁
+        if(currentUser.getLocked()){
+            return false;
+        }
         // 判断当前用户是否为管理员
         if (currentUser.getRoleId() <= 3){
             return true;

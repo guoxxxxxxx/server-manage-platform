@@ -111,7 +111,7 @@ public class ServerInfoController {
 
 
     @Auth
-    @Logger("关闭服务器")
+    @Logger("关闭服务器/关闭所有服务器")
     @PostMapping("/shutdownByIds")
     public CommonResult shutdownByIds(@RequestBody List<Long> serverIdList){
         Map<String, Object> result = serverInfoService.shutdownByIds(serverIdList);

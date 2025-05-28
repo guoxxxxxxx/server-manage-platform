@@ -1,10 +1,8 @@
 package com.iecas.servermanageplatform.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.iecas.servermanageplatform.pojo.dto.ResetPasswordDTO;
-import com.iecas.servermanageplatform.pojo.dto.UserLoginDTO;
-import com.iecas.servermanageplatform.pojo.dto.UserRegisterDTO;
-import com.iecas.servermanageplatform.pojo.dto.ValidAuthCodeDTO;
+import com.iecas.servermanageplatform.common.PageResult;
+import com.iecas.servermanageplatform.pojo.dto.*;
 import com.iecas.servermanageplatform.pojo.entity.UserInfo;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -65,5 +63,29 @@ public interface UserInfoService extends IService<UserInfo> {
      * @return true/false
      */
     boolean reset(ResetPasswordDTO dto);
+
+
+    /**
+     * 锁定/解锁用户
+     * @param userId 用户id
+     * @return true/false
+     */
+    boolean toggleLockedById(Long userId);
+
+
+    /**
+     * 获取用户列表
+     * @param dto 查询参数
+     * @return PageResult
+     */
+    PageResult<UserInfo> getUserList(QueryUserInfoDTO dto);
+
+
+    /**
+     * 改变用户角色
+     * @param dto 改变用户角色信息
+     * @return true/false
+     */
+    boolean changeUserRole(ChangeUserRoleDTO dto);
 }
 

@@ -3,6 +3,7 @@ package com.iecas.servermanageplatform.pojo.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -48,17 +49,19 @@ public class UserInfo implements Serializable {
     /**
      * 上次登录ip
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private String lastLoginIp;
 
     /**
      * 上次登录时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date lastLoginTime;
 
     /**
      * 账户锁
      */
-    private Object locked;
+    private Boolean locked;
     
     /**
      * 密码
@@ -68,6 +71,7 @@ public class UserInfo implements Serializable {
     /**
      * 注册时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date registerTime;
     
     /**

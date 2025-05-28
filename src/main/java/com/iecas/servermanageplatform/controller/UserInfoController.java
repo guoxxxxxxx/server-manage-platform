@@ -2,12 +2,11 @@ package com.iecas.servermanageplatform.controller;
 
 
 
+import com.iecas.servermanageplatform.aop.annotation.Auth;
 import com.iecas.servermanageplatform.aop.annotation.Logger;
 import com.iecas.servermanageplatform.common.CommonResult;
-import com.iecas.servermanageplatform.pojo.dto.ResetPasswordDTO;
-import com.iecas.servermanageplatform.pojo.dto.UserLoginDTO;
-import com.iecas.servermanageplatform.pojo.dto.UserRegisterDTO;
-import com.iecas.servermanageplatform.pojo.dto.ValidAuthCodeDTO;
+import com.iecas.servermanageplatform.common.PageResult;
+import com.iecas.servermanageplatform.pojo.dto.*;
 import com.iecas.servermanageplatform.pojo.entity.UserInfo;
 import com.iecas.servermanageplatform.service.UserInfoService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -78,6 +77,33 @@ public class UserInfoController {
     public CommonResult reset(@RequestBody ResetPasswordDTO dto){
         boolean result = userInfoService.reset(dto);
         return new CommonResult().success().data(result);
+    }
+
+
+    @Auth
+    @GetMapping("/toggleLockedById")
+    @Logger("切换用户是否被封禁通过id")
+    public CommonResult toggleLockedById(@RequestParam Long userId){
+        boolean result = userInfoService.toggleLockedById(userId);
+        return new CommonResult().success().data(result);
+    }
+
+
+    @Auth
+    @PostMapping("/getUserList")
+    @Logger("分页获取用户信息")
+    public CommonResult getUserList(@RequestBody QueryUserInfoDTO dto){
+        PageResult<UserInfo> result = userInfoService.getUserList(dto);
+        return new CommonResult().data(result).success();
+    }
+
+
+    @Auth
+    @PostMapping("/changeUserRole")
+    @Logger("改变用户的角色")
+    public CommonResult changeUserRole(@RequestBody ChangeUserRoleDTO dto){
+        boolean result = userInfoService.changeUserRole(dto);
+        return new CommonResult().data(result).success();
     }
 
 }

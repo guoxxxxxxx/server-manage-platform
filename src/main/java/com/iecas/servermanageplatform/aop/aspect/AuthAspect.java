@@ -13,6 +13,7 @@ import com.iecas.servermanageplatform.aop.annotation.Logger;
 import com.iecas.servermanageplatform.config.UserThreadLocal;
 import com.iecas.servermanageplatform.exception.AuthException;
 import com.iecas.servermanageplatform.exception.CustomLoginExpiredException;
+import com.iecas.servermanageplatform.exception.WarningTipsException;
 import com.iecas.servermanageplatform.pojo.entity.UserInfo;
 import com.iecas.servermanageplatform.service.UserInfoService;
 import jakarta.annotation.Resource;
@@ -62,7 +63,13 @@ public class AuthAspect {
         }
 
         UserInfo userInfo = userInfoService.parseUserInfoByToken(token);
-        UserThreadLocal.setUserInfo(userInfo);
+        // 从数据库中查询用户信息，确保信息的实时性
+        UserInfo currentUser = userInfoService.getById(userInfo.getId());
+        // 判断当前用户是否被封禁
+        if(currentUser.getLocked()){
+            throw new WarningTipsException("当前用户已被封禁");
+        }
+        UserThreadLocal.setUserInfo(currentUser);
     }
 
 

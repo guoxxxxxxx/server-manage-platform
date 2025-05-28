@@ -128,4 +128,8 @@ public class TbServerInfo {
     @Comment("默认密码是否正确")
     @Column(name = "pwd_is_correct", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean pwdIsCorrect;
+
+    @Comment("关机优先级")
+    @Column(name = "shutdown_rank", columnDefinition = "INT4 DEFAULT 5")
+    private Integer shutdownRank;
 }
