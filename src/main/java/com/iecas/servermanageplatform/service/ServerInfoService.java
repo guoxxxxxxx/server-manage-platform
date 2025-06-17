@@ -130,5 +130,28 @@ public interface ServerInfoService extends IService<ServerInfo> {
      * @return 认证结果
      */
     boolean auth(Long serverId, Long userId);
+
+
+    /**
+     * 查询所有服务器信息
+     * @return 服务器信息
+     */
+    List<ServerInfo> getWhiteList(boolean isWhite);
+
+
+    /**
+     * 添加服务器到白名单
+     * @param id 服务器id
+     * @return 添加结果
+     */
+    boolean addServer2White(Long id);
+
+
+    /**
+     * 移除服务器白名单
+     * @param id 服务器id
+     * @return 移除结果
+     */
+    boolean removeWhite(Long id);
 }
 

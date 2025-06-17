@@ -27,4 +27,9 @@ public class QueryServerInfoDTO {
      * 是否只显示在线服务器
      */
     private boolean onlyShowOnline;
+
+    /**
+     * 是否仅显示白名单信息，true 仅显示白名单， false 仅显示非白名单， null都显示
+     */
+    private Boolean inWhite;
 }

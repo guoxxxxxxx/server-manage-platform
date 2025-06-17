@@ -175,8 +175,14 @@ public class ServerInfo implements Serializable {
 
 
     /**
-     * 服务器关机优先级
+     * 服务器关机优先级, 等级越高，越晚关机
      */
     private Integer shutdownRank;
+
+
+    /**
+     * 是否在名单内
+     */
+    private Boolean inWhite;
 }
 

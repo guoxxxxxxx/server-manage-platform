@@ -135,5 +135,33 @@ public class ServerInfoController {
         boolean result = serverInfoService.updateServerInfoById(serverInfo);
         return new CommonResult().data(result).success();
     }
+
+
+    @Auth
+    @Logger("获取所有服务器信息")
+    @GetMapping("/getWhiteList")
+    public CommonResult getWhiteList(@RequestParam boolean isWhite){
+        List<ServerInfo> result = serverInfoService.getWhiteList(isWhite);
+        return new CommonResult().success().data(result);
+    }
+
+
+    @Auth
+    @Logger("将服务器添加至白名单中")
+    @GetMapping("/addServer2White")
+    public CommonResult addServer2White(@RequestParam Long id){
+        boolean result = serverInfoService.addServer2White(id);
+        return new CommonResult().data(result).success();
+    }
+
+
+    @Auth
+    @Logger("将服务器从白名单删除")
+    @DeleteMapping("/removeWhite/{id}")
+    public CommonResult removeWhite(@PathVariable(name = "id") Long id){
+        boolean result = serverInfoService.removeWhite(id);
+        return new CommonResult().data(result).success();
+    }
+
 }
 

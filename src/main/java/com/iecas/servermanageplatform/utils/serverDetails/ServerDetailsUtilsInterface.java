@@ -48,9 +48,10 @@ public interface ServerDetailsUtilsInterface {
     /**
      * 关闭服务器
      * @param password 当前服务器管理员密码
+     * @param delayTime 延迟时间
      * @return 关闭结果
      */
-    boolean shutdown(String password);
+    boolean shutdown(String password, int delayTime);
 
 
     /**

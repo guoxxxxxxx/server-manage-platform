@@ -132,4 +132,8 @@ public class TbServerInfo {
     @Comment("关机优先级")
     @Column(name = "shutdown_rank", columnDefinition = "INT4 DEFAULT 5")
     private Integer shutdownRank;
+
+    @Comment("是否在名单里")
+    @Column(name = "in_white", columnDefinition = "TINYINT(1) DEFAULT 0")
+    private Boolean inWhite;
 }

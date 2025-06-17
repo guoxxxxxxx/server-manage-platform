@@ -208,6 +208,8 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     @Override
     public List<ServerInfo> getByIds(List<Long> ids) {
+        if (ids.isEmpty())
+            return null;
         return baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
                 .in(ServerInfo::getId, ids));
     }
@@ -215,6 +217,9 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     @Override
     public List<ServerInfo> updateHardwareInfoByIds(List<Long> ids) {
+        if (ids.isEmpty()){
+            return null;
+        }
         // 更新服务器信息
         updateServerHardwareInfo(ids);
         // 获取更新后的服务器信息
@@ -287,7 +292,8 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
         // 更新服务器信息为准备关机
         serverInfo.setStatus(ServerStatusEnum.SHUTDOWN.getStatus());
         baseMapper.updateById(serverInfo);
-        return serverDetailsUtilsByServerId.shutdown(serverInfo.getLoginPassword());
+        return serverDetailsUtilsByServerId.shutdown(serverInfo.getLoginPassword(),
+                5 * (serverInfo.getShutdownRank() - 5));
     }
 
 
@@ -351,7 +357,9 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
         // 将要关闭的服务器的信息列表
         List<ServerInfo> allServerInfoList;
         if (serverIdList == null || serverIdList.isEmpty()){
-            allServerInfoList = baseMapper.selectList(null);
+            // 过滤在白名单中的服务器信息
+            allServerInfoList = baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
+                    .eq(ServerInfo::getInWhite, false));
         }
         else {
             allServerInfoList = baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
@@ -375,7 +383,7 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             }
             // 获取当前服务器的会话对象
             ServerDetailsUtils currentServerSession = getServerDetailsUtilsByServerId(e.getId());
-            boolean shutdown = currentServerSession.shutdown(e.getLoginPassword());
+            boolean shutdown = currentServerSession.shutdown(e.getLoginPassword(), 5 * (e.getShutdownRank() - 5));
             if (shutdown){
                 successList.add("服务器: " + e.getIp() + ":" + e.getPort() + " 关闭成功, 服务器将在60s内关闭!");
                 // 修改服务器状态
@@ -503,6 +511,42 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             }
         }
     }
+
+
+    @Override
+    public List<ServerInfo> getWhiteList(boolean isWhite) {
+        return baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
+                .eq(ServerInfo::getInWhite, isWhite));
+    }
+
+
+    @Override
+    public boolean addServer2White(Long id) {
+        // 查询当前服务器是否已经是白名单
+        ServerInfo serverInfo = baseMapper.selectById(id);
+        if (serverInfo.getInWhite()){
+            throw new WarningTipsException("当前服务器已经被添加至白名单");
+        }
+        int update = baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
+                .eq(ServerInfo::getId, id)
+                .set(ServerInfo::getInWhite, true));
+        return update == 1;
+    }
+
+
+    @Override
+    public boolean removeWhite(Long id) {
+        // 查询当前服务器是否在白名单中
+        ServerInfo serverInfo = baseMapper.selectById(id);
+        if (serverInfo == null || !serverInfo.getInWhite()){
+            throw new RuntimeException("当前服务器不存在或不在白名单中");
+        }
+        int result = baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
+                .eq(ServerInfo::getId, id)
+                .set(ServerInfo::getInWhite, false));
+        return result == 1;
+    }
+
 
     /**
      * 更新单个服务器信息

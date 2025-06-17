@@ -85,15 +85,18 @@ public class UbuntuServerDetailsUtils extends ServerDetailsUtils {
 
 
     @Override
-    public boolean shutdown(String password) {
-        try {
-            String shutdownCommand = String.format(ServerInfoCommandEnum.UBUNTU.getSHUTDOWN(), password);
-            sshUtils.exec(shutdownCommand);
-            return true;
-        } catch (TransportException e){
-            log.error("关机指令运行异常", e);
-        }
-        return false;
+    public boolean shutdown(String password, int delayTime) {
+        String shutdownCommand = String.format(ServerInfoCommandEnum.UBUNTU.getSHUTDOWN(), password);
+        Thread thread = new Thread(() -> {
+            log.info("延迟关机: {}秒", delayTime);
+            try {
+                sshUtils.exec(shutdownCommand);
+            } catch (TransportException e) {
+                log.error("关机指令运行异常", e);
+            }
+        });
+        thread.start();
+        return true;
     }
 
 
