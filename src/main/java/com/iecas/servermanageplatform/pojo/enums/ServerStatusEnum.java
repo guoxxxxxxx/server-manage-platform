@@ -12,12 +12,16 @@ public enum ServerStatusEnum {
 
     ONLINE("在线"),
     OFFLINE("离线"),
-    SHUTDOWN("60s内关机")
+    SHUTDOWN("分钟后关机!")
     ;
 
     private String status;
 
     ServerStatusEnum(String status){
         this.status = status;
+    }
+
+    public String getShutDownStatus(int delayTime){
+        return (delayTime) + SHUTDOWN.status;
     }
 }

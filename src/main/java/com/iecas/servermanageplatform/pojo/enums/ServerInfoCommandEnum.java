@@ -16,7 +16,7 @@ public enum ServerInfoCommandEnum {
             "cat /etc/os-release | grep PRETTY_NAME=",
             "free -k | grep Mem:",
             "df -k /home",
-            "echo '%s' | sudo -S shutdown",
+            "echo '%s' | sudo -S shutdown -h ",
             "shutdown -c",
             "echo '%s' | sudo -S reboot"
     );
@@ -44,5 +44,10 @@ public enum ServerInfoCommandEnum {
         this.SHUTDOWN = SHUTDOWN;
         this.CANCEL_SHUTDOWN = CANCEL_SHUTDOWN;
         this.REBOOT = REBOOT;
+    }
+
+
+    public String getSHUTDOWN(int delayTime){
+        return SHUTDOWN + delayTime;
     }
 }

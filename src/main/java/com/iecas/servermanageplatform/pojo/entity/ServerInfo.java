@@ -175,9 +175,9 @@ public class ServerInfo implements Serializable {
 
 
     /**
-     * 服务器关机优先级, 等级越高，越晚关机
+     * 服务器关机延迟时间, 单位分钟
      */
-    private Integer shutdownRank;
+    private Integer shutdownDelayTime;
 
 
     /**

@@ -214,6 +214,11 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoDao, UserInfo> impl
 
     @Override
     public PageResult<UserInfo> getUserList(QueryUserInfoDTO dto) {
+        // 判断当前用户是否权限足够，不够的话直接跳转到权限不足界面
+        UserInfo currentUser = UserThreadLocal.getUserInfo();
+        if (currentUser.getRoleId() >= 4){
+            throw new WarningTipsException("当前用户权限不足!");
+        }
         LambdaQueryWrapper<UserInfo> condition = new LambdaQueryWrapper<>();
         if (dto.getQueryParams() != null && !dto.getQueryParams().isEmpty()){
             condition = new LambdaQueryWrapper<UserInfo>()

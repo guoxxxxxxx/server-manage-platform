@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.schmizz.sshj.transport.TransportException;
 import org.springframework.data.util.Pair;
 
+import static java.lang.Thread.sleep;
+
 /**
 * @Author: guo_x
 * @Date: 2025/5/7 9:56
@@ -86,16 +88,14 @@ public class UbuntuServerDetailsUtils extends ServerDetailsUtils {
 
     @Override
     public boolean shutdown(String password, int delayTime) {
-        String shutdownCommand = String.format(ServerInfoCommandEnum.UBUNTU.getSHUTDOWN(), password);
-        Thread thread = new Thread(() -> {
-            log.info("延迟关机: {}秒", delayTime);
-            try {
-                sshUtils.exec(shutdownCommand);
-            } catch (TransportException e) {
-                log.error("关机指令运行异常", e);
-            }
-        });
-        thread.start();
+        String shutdownCommand = String.format(ServerInfoCommandEnum.UBUNTU.getSHUTDOWN(delayTime), password);
+        log.info("延迟关机: {}分", delayTime + 1);
+        try {
+            sshUtils.exec(shutdownCommand);
+        } catch (TransportException e) {
+            log.error("关机指令运行异常", e);
+            return false;
+        }
         return true;
     }
 

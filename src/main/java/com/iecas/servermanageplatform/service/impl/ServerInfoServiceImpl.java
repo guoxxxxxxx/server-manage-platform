@@ -293,7 +293,7 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
         serverInfo.setStatus(ServerStatusEnum.SHUTDOWN.getStatus());
         baseMapper.updateById(serverInfo);
         return serverDetailsUtilsByServerId.shutdown(serverInfo.getLoginPassword(),
-                5 * (serverInfo.getShutdownRank() - 5));
+                serverInfo.getShutdownDelayTime());
     }
 
 
@@ -365,8 +365,8 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             allServerInfoList = baseMapper.selectList(new LambdaQueryWrapper<ServerInfo>()
                     .in(ServerInfo::getId, serverIdList));
         }
-        // 对所要关闭的服务器按照优先级等级进行排序, 数值越大的越先关机
-        allServerInfoList.sort(Comparator.comparing(ServerInfo::getShutdownRank).reversed());
+        // 对所要关闭的服务器按照延迟时间进行排序
+        allServerInfoList.sort(Comparator.comparing(ServerInfo::getShutdownDelayTime));
         // 用于存储结果
         Map<String, Object> result = new HashMap<>();
         List<String> failList = new ArrayList<>();
@@ -383,13 +383,13 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
             }
             // 获取当前服务器的会话对象
             ServerDetailsUtils currentServerSession = getServerDetailsUtilsByServerId(e.getId());
-            boolean shutdown = currentServerSession.shutdown(e.getLoginPassword(), 5 * (e.getShutdownRank() - 5));
+            boolean shutdown = currentServerSession.shutdown(e.getLoginPassword(), e.getShutdownDelayTime());
             if (shutdown){
-                successList.add("服务器: " + e.getIp() + ":" + e.getPort() + " 关闭成功, 服务器将在60s内关闭!");
+                successList.add("服务器: " + e.getIp() + ":" + e.getPort() + " 关闭成功, 服务器将在指定时间内关闭!");
                 // 修改服务器状态
                 baseMapper.update(new LambdaUpdateWrapper<ServerInfo>()
                         .eq(ServerInfo::getId, e.getId())
-                        .set(ServerInfo::getStatus, ServerStatusEnum.SHUTDOWN.getStatus()));
+                        .set(ServerInfo::getStatus, ServerStatusEnum.SHUTDOWN.getShutDownStatus(e.getShutdownDelayTime())));
             }
             else {
                 failList.add("服务器: " + e.getIp() + ":" + e.getPort() + " 关闭失败, 原因: 未知错误！" );
