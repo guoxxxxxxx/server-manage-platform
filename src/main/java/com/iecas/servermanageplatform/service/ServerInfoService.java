@@ -153,5 +153,12 @@ public interface ServerInfoService extends IService<ServerInfo> {
      * @return 移除结果
      */
     boolean removeWhite(Long id);
+
+
+    /**
+     * 获取仪表盘信息
+     * @return 仪表盘信息
+     */
+    Map<String, Object> getDashboardInfo();
 }
 

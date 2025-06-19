@@ -89,7 +89,7 @@ public class UbuntuServerDetailsUtils extends ServerDetailsUtils {
     @Override
     public boolean shutdown(String password, int delayTime) {
         String shutdownCommand = String.format(ServerInfoCommandEnum.UBUNTU.getSHUTDOWN(delayTime), password);
-        log.info("延迟关机: {}分", delayTime + 1);
+        log.info("延迟关机: {}分", delayTime);
         try {
             sshUtils.exec(shutdownCommand);
         } catch (TransportException e) {

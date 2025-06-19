@@ -13,6 +13,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * (UserInfo)表控制层
  *
@@ -104,6 +107,24 @@ public class UserInfoController {
     public CommonResult changeUserRole(@RequestBody ChangeUserRoleDTO dto){
         boolean result = userInfoService.changeUserRole(dto);
         return new CommonResult().data(result).success();
+    }
+
+
+    @Auth
+    @GetMapping("/recentLoginUser")
+    @Logger("最近登录用户接口")
+    public CommonResult recentLoginUser(){
+        List<UserInfo> result = userInfoService.recentLoginUser();
+        return new CommonResult().data(result).success();
+    }
+
+
+    @Auth
+    @GetMapping("/getDashboardInfo")
+    @Logger("获取用户Dashboard界面")
+    public CommonResult getDashboardInfo(){
+        Map<String, Object> result = userInfoService.getDashboardInfo();
+        return new CommonResult().success().data(result);
     }
 
 }

@@ -21,12 +21,15 @@ import com.iecas.servermanageplatform.utils.RandomAuthCodeUtils;
 import io.jsonwebtoken.Claims;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.catalina.User;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -250,6 +253,33 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoDao, UserInfo> impl
         else {
             throw new WarningTipsException("当前用户无权限!");
         }
+    }
+
+
+    @Override
+    public List<UserInfo> recentLoginUser() {
+        List<UserInfo> result = baseMapper.selectList(new LambdaQueryWrapper<UserInfo>()
+                .orderBy(true, false, UserInfo::getLastLoginTime));
+        if (result.size() <= 8){
+            return result;
+        }
+        else {
+            return result.subList(0, 8);
+        }
+    }
+
+
+    @Override
+    public Map<String, Object> getDashboardInfo() {
+        // 查询用户总数
+        Long totalCount = baseMapper.selectCount(null);
+        // 查询活跃用户，规定最近一周内登录的用户是活跃用户
+        Long activateCount = baseMapper.selectCount(new LambdaQueryWrapper<UserInfo>()
+                .ge(UserInfo::getLastLoginTime, new Date().getTime() - 7 * 24 * 60 * 60 * 1000));
+        Map<String, Object> result = new HashMap<>();
+        result.put("totalCount", totalCount);
+        result.put("activateCount", activateCount);
+        return result;
     }
 
 

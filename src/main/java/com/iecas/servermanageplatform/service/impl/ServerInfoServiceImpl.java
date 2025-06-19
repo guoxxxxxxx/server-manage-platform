@@ -425,7 +425,7 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
         for (ServerInfo e : serverInfoList){
             try {
                 // 如果是则获取到相应的对象，并取消关闭服务器
-                if (e.getStatus().equals(ServerStatusEnum.SHUTDOWN.getStatus())) {
+                if (e.getStatus().contains("关机")) {
                     // 获取服务器控制端对象 并 取消关闭服务器
                     ServerDetailsUtils serverDetailsUtils = getServerDetailsUtilsByServerId(e.getId());
                     serverDetailsUtils.cancelShutDown();
@@ -548,6 +548,19 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
     }
 
 
+    @Override
+    public Map<String, Object> getDashboardInfo() {
+        // 获取服务器总数
+        Long serverCount = baseMapper.selectCount(null);
+        Long onlineServerCount = baseMapper.selectCount(new LambdaUpdateWrapper<ServerInfo>()
+                .like(ServerInfo::getStatus, "在线"));
+        Map<String, Object> result = new HashMap<>();
+        result.put("serverCount", serverCount);
+        result.put("onlineServerCount", onlineServerCount);
+        return result;
+    }
+
+
     /**
      * 更新单个服务器信息
      * @param e 更新的服务器信息
@@ -598,7 +611,7 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
                     .set(ServerInfo::getMemorySpace, serverHardwareInfo.getTotalMemSpace())
                     .set(ServerInfo::getFreeMemorySpace, serverHardwareInfo.getFreeMemSpace())
                     .set(ServerInfo::getLastUpdate, new Date())
-                    .set(e.getStatus() == null || !e.getStatus().equalsIgnoreCase(ServerStatusEnum.SHUTDOWN.getStatus()) || e.getStatus().isEmpty(), ServerInfo::getStatus, "在线")
+                    .set(e.getStatus() == null || e.getStatus().isEmpty() || !e.getStatus().contains("关机"), ServerInfo::getStatus, "在线")
                     .set(ServerInfo::getPwdIsCorrect, pwdIsCorrect)
             );
         }

@@ -163,5 +163,14 @@ public class ServerInfoController {
         return new CommonResult().data(result).success();
     }
 
+
+    @Auth
+    @Logger("获取面板服务器信息")
+    @GetMapping("/getDashboardInfo")
+    public CommonResult getDashboardInfo(){
+        Map<String, Object> result = serverInfoService.getDashboardInfo();
+        return new CommonResult().data(result).success();
+    }
+
 }
 

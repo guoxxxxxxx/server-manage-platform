@@ -6,6 +6,9 @@ import com.iecas.servermanageplatform.pojo.dto.*;
 import com.iecas.servermanageplatform.pojo.entity.UserInfo;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * (UserInfo)表服务接口
  *
@@ -87,5 +90,19 @@ public interface UserInfoService extends IService<UserInfo> {
      * @return true/false
      */
     boolean changeUserRole(ChangeUserRoleDTO dto);
+
+
+    /**
+     * 获取最近登录用户
+     * @return List<UserInfo>
+     */
+    List<UserInfo> recentLoginUser();
+
+
+    /**
+     * 获取用户Dashboard信息
+     * @return Map<String, Object>
+     */
+    Map<String, Object> getDashboardInfo();
 }
 
