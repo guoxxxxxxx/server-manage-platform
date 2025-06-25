@@ -172,5 +172,14 @@ public class ServerInfoController {
         return new CommonResult().data(result).success();
     }
 
+
+    @Auth
+    @Logger("根据id删除服务器信息")
+    @DeleteMapping("/{id}")
+    public CommonResult deleteById(@PathVariable(name = "id") Long id){
+        boolean result = serverInfoService.deleteById(id);
+        return new CommonResult().data(result).success();
+    }
+
 }
 

@@ -104,5 +104,13 @@ public interface UserInfoService extends IService<UserInfo> {
      * @return Map<String, Object>
      */
     Map<String, Object> getDashboardInfo();
+
+
+    /**
+     * 删除用户
+     * @param id 用户id
+     * @return true/false
+     */
+    boolean deleteById(int id);
 }
 

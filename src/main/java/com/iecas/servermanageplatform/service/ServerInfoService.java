@@ -160,5 +160,13 @@ public interface ServerInfoService extends IService<ServerInfo> {
      * @return 仪表盘信息
      */
     Map<String, Object> getDashboardInfo();
+
+
+    /**
+     * 删除服务器信息
+     * @param id 服务器id
+     * @return 删除结果
+     */
+    boolean deleteById(Long id);
 }
 

@@ -76,6 +76,10 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
                 failList.add(serverInfo);
                 continue;
             }
+            // 如果没有设置端口，则默认端口为22
+            if (serverInfo.getPort().isEmpty()){
+                serverInfo.setPort("22");
+            }
             // 判断当前信息是否已经被存入过 根据主机ip来进行判断, 当二者都相等时, 则认为当前机器已经被添加过
             ServerInfo existServerInfo = baseMapper.selectOne(new LambdaQueryWrapper<ServerInfo>()
                     .eq(ServerInfo::getIp, serverInfo.getIp())
@@ -558,6 +562,21 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
         result.put("serverCount", serverCount);
         result.put("onlineServerCount", onlineServerCount);
         return result;
+    }
+
+
+    @Override
+    public boolean deleteById(Long id) {
+        // 鉴权判断当前用户权限等级是否是管理员级或当前用户是当前服务器的创建者
+        ServerInfo currentServerInfo = baseMapper.selectById(id);
+        UserInfo currentUser = UserThreadLocal.getUserInfo();
+        if (Objects.equals(currentServerInfo.getUserId(), currentUser.getId()) || currentUser.getRoleId() <= 3){
+            baseMapper.deleteById(id);
+            return true;
+        }
+        else {
+            throw new WarningTipsException("当前用户无权限");
+        }
     }
 
 

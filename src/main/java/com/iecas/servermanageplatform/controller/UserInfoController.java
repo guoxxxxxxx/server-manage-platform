@@ -127,5 +127,14 @@ public class UserInfoController {
         return new CommonResult().success().data(result);
     }
 
+
+    @Auth
+    @DeleteMapping("/{id}")
+    @Logger("根据id删除用户")
+    public CommonResult deleteById(@PathVariable(name = "id") int id){
+        boolean result = userInfoService.deleteById(id);
+        return new CommonResult().data(result).success();
+    }
+
 }
 

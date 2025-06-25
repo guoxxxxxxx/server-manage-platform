@@ -33,7 +33,7 @@ public class UbuntuServerDetailsUtils extends ServerDetailsUtils {
     public String getCPUInfo(){
         try {
             String result = sshUtils.exec(ServerInfoCommandEnum.UBUNTU.getCPU());
-            return result.replaceFirst("Model name:\\s+", "");
+            return result.replaceFirst("Model name:|型号名称：\\s+", "");
         } catch (TransportException e){
             log.error("获取CPU信息指令运行异常", e);
         }

@@ -4,5 +4,5 @@ mysql:
 
 redis:
   url: 8.147.220.43
-  port: 36379
+  port: 16379
   password: A123456

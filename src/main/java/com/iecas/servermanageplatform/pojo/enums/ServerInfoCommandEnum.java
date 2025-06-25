@@ -12,9 +12,9 @@ import lombok.Getter;
 public enum ServerInfoCommandEnum {
 
     UBUNTU(
-            "lscpu | grep \"Model name:\"",
+            "lscpu | grep -E \"Model name:|型号名称：\"",
             "cat /etc/os-release | grep PRETTY_NAME=",
-            "free -k | grep Mem:",
+            "free -k | grep -E \"Mem:|内存：\"",
             "df -k /home",
             "echo '%s' | sudo -S shutdown -h ",
             "shutdown -c",

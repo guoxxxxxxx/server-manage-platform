@@ -110,7 +110,7 @@ public class TbServerInfo {
     private Boolean deleted;
 
     @Comment("服务器状态")
-    @Column(name = "status")
+    @Column(name = "status", columnDefinition = "VARCHAR(32) DEFAULT '离线'")
     private String status;
 
     @Comment("上一次更新时间")
