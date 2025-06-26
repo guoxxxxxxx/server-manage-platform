@@ -16,7 +16,6 @@ import com.iecas.servermanageplatform.pojo.enums.ServerStatusEnum;
 import com.iecas.servermanageplatform.pojo.vo.AddServerInfoVO;
 import com.iecas.servermanageplatform.service.ServerInfoService;
 import com.iecas.servermanageplatform.service.ServerUserAuthorityInfoService;
-import com.iecas.servermanageplatform.service.ServerUserPasswordInfoService;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsFactory;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerDetailsUtils;
 import com.iecas.servermanageplatform.utils.serverDetails.ServerOnlineChecker;
@@ -46,10 +45,6 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     // 连接缓存
     private final ConcurrentHashMap<Long, ServerDetailsUtils> serverDetailsUtilsConcurrentHashMap = new ConcurrentHashMap<>();
-
-
-    @Resource
-    private ServerUserPasswordInfoService serverUserPasswordInfoService;
 
     @Resource
     @Lazy
@@ -92,43 +87,12 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
                 serverInfo.setUserId(currentUser.getId());
                 // 数据库中未检索到记录, 将记录保存至数据库
                 int insert = baseMapper.insert(serverInfo);
-                // 将当前用户所输入的用户名和密码存入tb_server_user_password数据库中
-                ServerUserPasswordInfo serverUserPasswordInfo = ServerUserPasswordInfo.builder()
-                        .serverId(serverInfo.getId())
-                        .username(serverInfo.getLoginUsername())
-                        .password(serverInfo.getLoginPassword())
-                        .userId(currentUser.getId()).build();
-                serverUserPasswordInfoService.save(serverUserPasswordInfo);
                 successCount += insert;
                 // 多线程更新服务器硬件信息
                 Thread updateThread = new Thread(() -> {
                     updateHardwareInfo(serverInfo.getId());
                 });
                 updateThread.start();
-            }
-            else{
-                // 查询当前用户针对当前服务器是否有存在的账户密码
-                List<ServerUserPasswordInfo> serverUserPasswordInfoList = serverUserPasswordInfoService.list(new LambdaQueryWrapper<ServerUserPasswordInfo>()
-                        .eq(ServerUserPasswordInfo::getUserId, currentUser.getId())
-                        .eq(ServerUserPasswordInfo::getServerId, existServerInfo.getId()));
-
-                // 如果不存在则直接插入
-                if (serverUserPasswordInfoList == null || serverUserPasswordInfoList.isEmpty()){
-                    ServerUserPasswordInfo serverUserPasswordInfo = ServerUserPasswordInfo.builder()
-                            .userId(currentUser.getId())
-                            .serverId(serverInfo.getId())
-                            .password(serverInfo.getLoginPassword())
-                            .username(serverInfo.getLoginUsername())
-                            .serverId(existServerInfo.getId())
-                            .build();
-                    serverUserPasswordInfoService.save(serverUserPasswordInfo);
-                }
-                // 否则按错误处理
-                else {
-                    failCount += 1;
-                    failList.add(serverInfo);
-                }
-
             }
         }
 

@@ -7,11 +7,9 @@ import com.github.lalyos.jfiglet.FigletFont;
 import com.iecas.servermanageplatform.common.SocketMessage;
 import com.iecas.servermanageplatform.exception.WarningTipsException;
 import com.iecas.servermanageplatform.pojo.entity.ServerInfo;
-import com.iecas.servermanageplatform.pojo.entity.ServerUserPasswordInfo;
 import com.iecas.servermanageplatform.pojo.entity.UserInfo;
 import com.iecas.servermanageplatform.pojo.enums.CharsetEnum;
 import com.iecas.servermanageplatform.service.ServerInfoService;
-import com.iecas.servermanageplatform.service.ServerUserPasswordInfoService;
 import com.iecas.servermanageplatform.service.UserInfoService;
 import com.iecas.servermanageplatform.utils.SpringContextUtils;
 import jakarta.annotation.Resource;
@@ -57,7 +55,6 @@ public class AutoAuthSSHWebSocketHandler {
         // 获取实例对象
         UserInfoService userInfoService = SpringContextUtils.getBean(UserInfoService.class);
         ServerInfoService serverInfoService = SpringContextUtils.getBean(ServerInfoService.class);
-        ServerUserPasswordInfoService serverUserPasswordInfoService = SpringContextUtils.getBean(ServerUserPasswordInfoService.class);
 
         // 建立socket连接
         this.sessionSocket = sessionSocket;
@@ -80,11 +77,6 @@ public class AutoAuthSSHWebSocketHandler {
 
         // 获取所要链接服务器的详细信息
         ServerInfo serverInfo = serverInfoService.getById(serverId);
-        // 查询当前用户所存的当前服务器的用户名与密码
-        List<ServerUserPasswordInfo> serverUserPasswordInfoList = serverUserPasswordInfoService.list(new LambdaQueryWrapper<ServerUserPasswordInfo>()
-                .eq(ServerUserPasswordInfo::getServerId, serverId)
-                .eq(ServerUserPasswordInfo::getUserId, userInfo.getId()));
-        int usernamePasswordIndex = 0;
 
         // 与服务器建立连接
         String host = serverInfo.getIp();
@@ -92,32 +84,27 @@ public class AutoAuthSSHWebSocketHandler {
 
 
         sshClient = new SSHClient();
-        while (usernamePasswordIndex < serverUserPasswordInfoList.size()){
-            String username = serverUserPasswordInfoList.get(usernamePasswordIndex).getUsername();
-            String password = serverUserPasswordInfoList.get(usernamePasswordIndex).getPassword();
-            usernamePasswordIndex += 1;
+        String username = serverInfo.getLoginUsername();
+        String password = serverInfo.getLoginPassword();
+        try {
+            // 设置连接最大超时时间
+            sshClient.setConnectTimeout(600000);
+            // 不验证主机密钥
+            sshClient.addHostKeyVerifier(new PromiscuousVerifier());
+            // 通过用户名和密码登录目的主机
+            sshClient.connect(host, port);
             try {
-                // 设置连接最大超时时间
-                sshClient.setConnectTimeout(600000);
-                // 不验证主机密钥
-                sshClient.addHostKeyVerifier(new PromiscuousVerifier());
-                // 通过用户名和密码登录目的主机
-                sshClient.connect(host, port);
-                try {
-                    sshClient.authPassword(username, password);
-                    break;
-                } catch (IOException e){
-                    log.debug("当前用户名密码验证失败,正在进行其他尝试...");
-                }
+                sshClient.authPassword(username, password);
             } catch (IOException e){
-                log.error("服务器建立连接异常! ", e);
-                sendMessage(sessionSocket, "FailMessage", true,"Fail to connect remote server !");
-                return;
-            }
-            if (usernamePasswordIndex == serverUserPasswordInfoList.size()){
+                log.debug("当前用户名密码验证失败,正在进行其他尝试...");
                 sendMessage(sessionSocket, "FailMessage", true, "连接远程服务器失败, 请检查用户名和密码或服务器ip、端口配置!");
             }
+        } catch (IOException e){
+            log.error("服务器建立连接异常! ", e);
+            sendMessage(sessionSocket, "FailMessage", true,"Fail to connect remote server !");
+            return;
         }
+
 
         // 获取服务器编码格式
         try (net.schmizz.sshj.connection.channel.direct.Session sshSession = sshClient.startSession();
