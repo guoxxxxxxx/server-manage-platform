@@ -9,13 +9,16 @@
 package com.iecas.servermanageplatform.config;
 
 import com.iecas.servermanageplatform.pojo.entity.RoleInfo;
+import com.iecas.servermanageplatform.pojo.entity.UserInfo;
 import com.iecas.servermanageplatform.service.RoleInfoService;
+import com.iecas.servermanageplatform.service.UserInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -26,6 +29,9 @@ public class RoleDatabaseInitializer implements CommandLineRunner {
     @Autowired
     private RoleInfoService roleInfoService;
 
+    @Autowired
+    private UserInfoService userInfoService;
+
     @Override
     public void run(String... args) {
         log.info("🔍 正在检测数据库角色和权限数据...");
@@ -35,6 +41,17 @@ public class RoleDatabaseInitializer implements CommandLineRunner {
             insertRoles();
         }
 
+        log.info("✨正在检测系统超级管理员用户是否创建...");
+        if (!userInfoService.systemUserIsExist()){
+            log.info("❗检测到系统超级管理员用户不存在, 正在创建该用户...");
+            UserInfo systemUser = new UserInfo().builder()
+                    .registerTime(new Date())
+                    .username("system")
+                    .password("iecas")
+                    .roleId(1L)
+                    .build();
+            userInfoService.save(systemUser);
+        }
         log.info("✅ 数据库初始化完成！");
     }
 

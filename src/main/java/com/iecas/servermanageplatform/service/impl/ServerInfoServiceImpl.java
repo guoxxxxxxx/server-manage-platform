@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.userauth.UserAuthException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +52,9 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
     private ServerUserPasswordInfoService serverUserPasswordInfoService;
 
     @Resource
+    @Lazy
     private ServerUserAuthorityInfoService serverUserAuthorityInfoService;
+
     @Autowired
     private UserInfoServiceImpl userInfoService;
 
@@ -504,9 +507,9 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
                 // 查询当前服务器对应的当前用户的权限信息记录
                 List<ServerUserAuthorityInfo> authorityInfo = serverUserAuthorityInfoService.list(new LambdaQueryWrapper<ServerUserAuthorityInfo>()
                         .eq(ServerUserAuthorityInfo::getServerId, serverId)
-                        .eq(ServerUserAuthorityInfo::getUserId, currentServerInfo.getId()));
+                        .eq(ServerUserAuthorityInfo::getUserId, currentUser.getId()));
                 // 若authorityInfo为空或其caAccess属性为false则无访问权限
-                if (authorityInfo == null || authorityInfo.isEmpty() || authorityInfo.get(0).isCanAccess()){
+                if (authorityInfo == null || authorityInfo.isEmpty() || !authorityInfo.get(0).isCanAccess()){
                     return false;
                 }
                 else {
@@ -526,6 +529,11 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     @Override
     public boolean addServer2White(Long id) {
+        // 鉴权
+        UserInfo currentUser = UserThreadLocal.getUserInfo();
+        if (currentUser.getRoleId() > 3){
+            throw new WarningTipsException("当前用户无权限");
+        }
         // 查询当前服务器是否已经是白名单
         ServerInfo serverInfo = baseMapper.selectById(id);
         if (serverInfo.getInWhite()){
@@ -540,6 +548,11 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoDao, ServerInfo
 
     @Override
     public boolean removeWhite(Long id) {
+        // 鉴权
+        UserInfo currentUser = UserThreadLocal.getUserInfo();
+        if (currentUser.getRoleId() > 3){
+            throw new WarningTipsException("当前用户无权限");
+        }
         // 查询当前服务器是否在白名单中
         ServerInfo serverInfo = baseMapper.selectById(id);
         if (serverInfo == null || !serverInfo.getInWhite()){

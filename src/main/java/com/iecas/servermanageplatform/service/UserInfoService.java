@@ -112,5 +112,11 @@ public interface UserInfoService extends IService<UserInfo> {
      * @return true/false
      */
     boolean deleteById(int id);
+
+
+    /**
+     * 查询系统超级管理员用户是否创建
+     */
+    boolean systemUserIsExist();
 }
 

@@ -300,6 +300,13 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoDao, UserInfo> impl
     }
 
 
+    @Override
+    public boolean systemUserIsExist() {
+        return baseMapper.exists(new LambdaQueryWrapper<UserInfo>()
+                .eq(UserInfo::getUsername, "system"));
+    }
+
+
     /**
      * 根据用户名或用户邮箱检查用户是否已经注册
      * @param usernameOrEmail 用户名或邮箱

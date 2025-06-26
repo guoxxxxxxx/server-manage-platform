@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iecas.servermanageplatform.dao.ServerUserAuthorityInfoDao">
+
+    <resultMap type="com.iecas.servermanageplatform.pojo.entity.ServerUserAuthorityInfo" id="ServerUserAuthorityInfoMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="canAccess" column="can_access" jdbcType="VARCHAR"/>
+        <result property="deleted" column="deleted" jdbcType="INTEGER"/>
+        <result property="serverId" column="server_id" jdbcType="INTEGER"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+    </resultMap>
+    
+    <!--查询指定服务器的用户权限信息-->
+    <select id="getCurrentServerUserAuth" resultType="com.iecas.servermanageplatform.pojo.vo.UserAuthServerVO">
+        SELECT
+        u.id AS userId,
+        u.username,
+        r.description AS roleName,
+        CASE
+            WHEN a.user_id IS NULL AND 3 >= u.role_id THEN 1
+            ELSE IFNULL(a.can_access, 0)
+        END AS canAccess,
+        #{serverId} AS serverId
+        FROM tb_user_info u
+        LEFT JOIN tb_role_info r ON u.role_id = r.id
+        LEFT JOIN tb_server_user_authority_info a
+        ON u.id = a.user_id AND a.server_id = #{serverId} AND a.deleted = 0
+        WHERE u.deleted = 0
+    </select>
+
+</mapper>
+

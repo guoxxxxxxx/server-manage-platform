@@ -3,6 +3,7 @@ package com.iecas.servermanageplatform.pojo.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serial;
@@ -17,7 +18,7 @@ import java.util.Date;
  */
 
 
-
+@Builder
 @Data
 public class ServerUserAuthorityInfo implements Serializable {
 
